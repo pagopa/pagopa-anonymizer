@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_KEY: pagopa-anonymizer
+  PROJECT_KEY: pagopa_pagopa-anonymizer
 
 permissions:
   id-token: write
@@ -41,7 +41,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.11' # Sostituisci con la tua versione Python
+          python-version: '3.11'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
 
       - name: Install dependencies
         run: |
@@ -51,18 +60,12 @@ jobs:
 
       - name: Run tests and generate coverage report
         run: |
-          pytest -v  --cov --cov-report=xml --cov-report=html
+          pytest -v --cov=src --cov-report=xml --cov-report=html
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v5.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
-
-      - name: SonarQube Scan
-        uses: sonarsource/sonarcloud-github-action@v5.0.0
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
         with:
           projectBaseDir: src/
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
