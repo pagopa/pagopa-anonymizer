@@ -4,6 +4,13 @@ from anonymizer_logic import anonymize_text_with_presidio
 
 app = Flask(__name__)
 
+@app.route('/info', methods=['GET'])
+def info():
+    """
+    GET endpoint for liveness & readiness 
+    """
+    return "ok", 200
+
 @app.route('/anonymize', methods=['POST'])
 def anonymize_endpoint():
     """
