@@ -1,5 +1,7 @@
 # PII Anonymization Service
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-gpd-rtp&metric=alert_status)](https://sonarcloud.io/dashboard?id=pagopa_pagopa-anonymizer)
+
 This project is a simple Flask API that exposes an endpoint to anonymize text, with a particular focus on identifying and masking Personally Identifiable Information (PII) in Italian text using Microsoft Presidio.
 
 
