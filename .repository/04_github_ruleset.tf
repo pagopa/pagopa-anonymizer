@@ -21,10 +21,10 @@ resource "github_repository_ruleset" "branch_ruleset" {
   }
 
   rules {
-    creation                = true
-    update                  = true
-    deletion                = true
-    non_fast_forward        = true
+    creation                = false
+    update                  = false
+    deletion                = false
+    non_fast_forward        = false
     required_linear_history = false
     required_signatures     = false
 
