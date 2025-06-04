@@ -1,4 +1,6 @@
 resource "github_repository_environment" "github_repository_environment" {
+  depends_on = [github_repository.repository]
+
   environment = var.env
   repository  = local.github.repository
   # filter teams reviewers from github_organization_teams
@@ -21,7 +23,7 @@ resource "github_repository_environment" "github_repository_environment" {
 
 locals {
   env_secrets = {
-    "CLIENT_ID" : data.azurerm_user_assigned_identity.identity_cd_01.client_id,
+    # "CLIENT_ID" : data.azurerm_user_assigned_identity.identity_cd_01.client_id,
     "TENANT_ID" : data.azurerm_client_config.current.tenant_id,
     "SUBSCRIPTION_ID" : data.azurerm_subscription.current.subscription_id,
     "SUBKEY" : data.azurerm_key_vault_secret.key_vault_integration_test_subkey.value,
@@ -33,7 +35,7 @@ locals {
     "CLUSTER_RESOURCE_GROUP" : local.aks_cluster.resource_group_name,
     "DOMAIN" : local.domain,
     "NAMESPACE" : local.domain,
-    "WORKLOAD_IDENTITY_ID": data.azurerm_user_assigned_identity.workload_identity_clientid.client_id
+    # "WORKLOAD_IDENTITY_ID": data.azurerm_user_assigned_identity.workload_identity_clientid.client_id
   }
   repo_secrets = {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,
@@ -41,14 +43,6 @@ locals {
     "CUCUMBER_PUBLISH_TOKEN" : data.azurerm_key_vault_secret.key_vault_cucumber_token.value,
   }
 
-  labels = {
-    "small" : "C2E0C6",
-    "big" : "FBCA04",
-    "patch" : "B60205",
-    "minor" : "0E8A16",
-    "major" : "1D76DB",
-    "skip" : "CFD3D7",
-  }
 }
 
 ###############
@@ -84,11 +78,4 @@ resource "github_actions_secret" "repo_secrets" {
   repository      = local.github.repository
   secret_name     = each.key
   plaintext_value = each.value
-}
-
-resource "github_issue_label" "repo_labels" {
-  for_each        = local.labels
-  repository = local.github.repository
-  name       = each.key
-  color      = each.value
 }
