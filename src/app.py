@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-
+from configparser import ConfigParser
+import os
 from anonymizer_logic import anonymize_text_with_presidio
 
 app = Flask(__name__)
@@ -8,8 +9,22 @@ app = Flask(__name__)
 def info():
     """
     GET endpoint for liveness & readiness 
+    Returns:
+        name: The name of the application
+        version: The application version
+        environment: The environment variable from .env
     """
-    return "ok", 200
+    try:
+        config = ConfigParser()
+        config.read('setup.cfg')
+        app_name = config.get("metadata", "name")
+        app_version = config.get("metadata", "version")
+        return jsonify({"name": app_name, "version": app_version, "environment": os.getenv("ENV", "not specified")}), 200
+
+    except Exception as e:
+        # Generic error handling for unexpected issues
+        app.logger.error(f"Error in /info endpoint: {str(e)}")
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 @app.route('/anonymize', methods=['POST'])
 def anonymize_endpoint():

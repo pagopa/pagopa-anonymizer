@@ -2,3 +2,4 @@ Flask==3.1.0
 it_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/it_core_news_lg-3.8.0/it_core_news_lg-3.8.0-py3-none-any.whl#sha256=b78582d0b2d05fd6509995f68ab7452efed7a27c6fbc5a071e9a9787a58c1e87
 presidio_analyzer==2.2.358
 presidio_anonymizer==2.2.358
+configparser==7.2.0

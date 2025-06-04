@@ -84,7 +84,7 @@ See an example of how you might document this with OpenAPI 3:
 
 2.  **Create and activate a virtual environment:**
     ```bash
-    python -m venv venv
+    python3 -m venv venv
     # On Windows:
     # venv\Scripts\activate
     # On macOS/Linux:
@@ -95,17 +95,18 @@ See an example of how you might document this with OpenAPI 3:
     ```bash
     pip install -r requirements.txt
     ```
-
+<!-- No longer needed, it_core_news_lg is in requirements.txt
 4.  **Download spaCy Italian language model:**
     ```bash
-    python -m spacy download it_core_news_lg
+    python3 -m spacy download it_core_news_lg
     ```
+-->
 
 ### Run the Application
 
 Start the Flask development server:
 ```bash
-python app.py
+python3 app.py
 ```
 The application will typically be available at `http://127.0.0.1:5000/`.
 
