@@ -1,0 +1,11 @@
+apiVersion: v2
+name: pagopa-anonymizer
+description: Microservice to anonymize PII
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+dependencies:
+  - name: microservice-chart
+    version: 7.5.0
+    repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
+    alias: pagopa-anonymizer
