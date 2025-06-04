@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from configparser import ConfigParser
 import os
-from anonymizer_logic import anonymize_text_with_presidio
+from src.anonymizer_logic import anonymize_text_with_presidio
 
 app = Flask(__name__)
 
