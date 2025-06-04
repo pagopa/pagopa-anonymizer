@@ -2,7 +2,7 @@ resource "github_repository_ruleset" "branch_ruleset" {
 
   depends_on = [github_repository_environment.github_repository_environment]
 
-  name        = "main"
+  name        = "main protection"
   repository  = local.github.repository
   target      = "branch"
   enforcement = "active"
@@ -14,6 +14,11 @@ resource "github_repository_ruleset" "branch_ruleset" {
     }
   }
 
+  bypass_actors {
+    actor_id    = 5
+    actor_type  = "RepositoryRole"
+    bypass_mode = "always"
+  }
 
   rules {
     creation                = true
@@ -36,7 +41,7 @@ resource "github_repository_ruleset" "branch_ruleset" {
       strict_required_status_checks_policy = false
 
       required_check {
-        context        = "Code Review"
+        context = "Code Review"
       }
     }
   }
