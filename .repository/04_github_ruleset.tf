@@ -1,6 +1,6 @@
-resource "github_repository_ruleset" "branch_ruleset" {
 
-  depends_on = [github_repository_environment.github_repository_environment]
+# terraform import github_repository_ruleset.branch_ruleset pagopa-anonymizer:5859622
+resource "github_repository_ruleset" "branch_ruleset" {
 
   name        = "main protection"
   repository  = local.github.repository

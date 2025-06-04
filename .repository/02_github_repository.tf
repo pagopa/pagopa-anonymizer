@@ -1,3 +1,6 @@
+
+# terraform import github_repository.repository pagopa-anonymizer
+
 resource "github_repository" "repository" {
   name        = local.github.repository
   description = "Anonymize text from PII"
