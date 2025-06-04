@@ -1,8 +1,8 @@
 locals {
 
   labels = {
-    "small" : "C2E0C6",
-    "big" : "FBCA04",
+    "size/small" : "C2E0C6",
+    "size/large" : "FBCA04",
     "patch" : "B60205",
     "minor" : "0E8A16",
     "major" : "1D76DB",
