@@ -5,6 +5,7 @@ from src.anonymizer_logic import anonymize_text_with_presidio
 
 app = Flask(__name__)
 
+
 @app.route('/info', methods=['GET'])
 def info():
     """
@@ -60,5 +61,4 @@ def anonymize_endpoint():
         return jsonify({"error": "An internal server error occurred"}), 500
 
 if __name__ == '__main__':
-    # Run the Flask app. debug=True is useful for development.
-    app.run(debug=False, port=5000)
+    app.run(host='0.0.0.0', port=3000, debug=True)

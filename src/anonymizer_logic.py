@@ -56,7 +56,7 @@ iuv_recognizer = PatternRecognizer(patterns=[iuv_pattern],
 medical_patterns = [
     Pattern(
         name="MEDICAL_MENTION",
-        regex=r"\b(?<=visita medica\s)(.*)$",
+        regex=r"\b(?<=visita\s)(.*)$",
         score=0.7
     ),
 ]
@@ -108,6 +108,9 @@ anonymize_keep_initials_lambda = lambda text: " ".join(
 # Defines how recognized PII should be replaced.
 DEFAULT_OPERATORS = {
     "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
+    "LOCATION": OperatorConfig("replace", {"new_value": "<LOCATION>"}),
+    "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<IT_VEHICLE_PLATE>"}),
+    "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
     # You can define specific operators for different entity types:
     # "PERSON": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
     # "ITALIAN_ADDRESS": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
@@ -133,6 +136,7 @@ ENTITIES_TO_ANONYMIZE = [
     "DATE_TIME",   # Language agnostic but recognizes formats common in the language
     "CRYPTO",      # Language agnostic
     "NRP",         # National Registration P. (general, may need specific IT)
+    #"LOCATION",
 
     # Presidio Italian-specific built-in
     "IT_FISCAL_CODE",
