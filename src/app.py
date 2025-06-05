@@ -1,18 +1,44 @@
-from flask import Flask, request, jsonify
+from flask import jsonify
+from flask_openapi3 import OpenAPI, Info, Tag
+from pydantic import BaseModel, Field
 from configparser import ConfigParser
 import os
-from src.anonymizer_logic import anonymize_text_with_presidio
+from anonymizer_logic import anonymize_text_with_presidio
 
-app = Flask(__name__)
+# OpenAPI metadata
+info = Info(title="Anonymizer API", version="1.0.0")
+app = OpenAPI(__name__, info=info)
 
-@app.route('/info', methods=['GET'])
+info_tag = Tag(name="Info", description="Liveness & readiness endpoints")
+anonymize_tag = Tag(name="Anonymize", description="Text anonymization endpoints")
+
+class AnonymizeRequest(BaseModel):
+    text: str = Field(..., description="Text to be anonymized")
+
+class AnonymizeResponse(BaseModel):
+    text: str = Field(..., description="Anonymized text")
+
+class InfoResponse(BaseModel):
+    name: str
+    version: str
+    environment: str
+
+class ErrorResponse(BaseModel):
+    error: str
+
+@app.get(
+    '/info',
+    tags=[info_tag],
+    responses={
+        200: InfoResponse,
+        500: ErrorResponse,
+    },
+    summary="Get application info",
+    description="Liveness & readiness endpoint. Returns application name, version, and environment."
+)
 def info():
     """
     GET endpoint for liveness & readiness 
-    Returns:
-        name: The name of the application
-        version: The application version
-        environment: The environment variable from .env
     """
     try:
         config = ConfigParser()
@@ -22,43 +48,36 @@ def info():
         return jsonify({"name": app_name, "version": app_version, "environment": os.getenv("ENV", "not specified")}), 200
 
     except Exception as e:
-        # Generic error handling for unexpected issues
         app.logger.error(f"Error in /info endpoint: {str(e)}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
-@app.route('/anonymize', methods=['POST'])
-def anonymize_endpoint():
+@app.post(
+    '/anonymize',
+    tags=[anonymize_tag],
+    responses={
+        200: AnonymizeResponse,
+        400: ErrorResponse,
+        500: ErrorResponse,
+    },
+    summary="Anonymize text",
+    description="Anonymizes the provided text using Presidio."
+)
+def anonymize_endpoint(body: AnonymizeRequest):
     """
     POST endpoint to anonymize the provided text.
-    Expects a JSON body with a "text" field.
     """
     try:
-        # 1. Get JSON data from the request
-        data = request.get_json()
-
-        # 2. Validate that data was sent and 'text' key exists
-        if not data:
-            return jsonify({"error": "Invalid JSON request or incorrect Content-Type (must be application/json)"}), 400
-
-        input_text = data.get('text')
-
-        if input_text is None:
-            return jsonify({"error": "The 'text' field is missing from the JSON request body"}), 400
+        input_text = body.text
 
         if not isinstance(input_text, str):
             return jsonify({"error": "The 'text' field must be a string"}), 400
 
-        # 3. Call the anonymization logic from the separate module
         anonymized_text_output = anonymize_text_with_presidio(input_text)
-
-        # 4. Return the response
         return jsonify({"text": anonymized_text_output}), 200
 
     except Exception as e:
-        # Generic error handling for unexpected issues
         app.logger.error(f"Error in /anonymize endpoint: {str(e)}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
 if __name__ == '__main__':
-    # Run the Flask app. debug=True is useful for development.
     app.run(debug=False, port=5000)
