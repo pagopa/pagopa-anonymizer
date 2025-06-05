@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-anonymizer"
   image:
     repository: ghcr.io/pagopa/pagopa-anonymizer
-    tag: "latest"
+    tag: "0.0.1"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -49,10 +49,10 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "512Mi"
+      memory: "3Gi"
       cpu: "0.25"
     limits:
-      memory: "2Gi"
+      memory: "6Gi"
       cpu: "0.50"
   autoscaling:
     enable: true
