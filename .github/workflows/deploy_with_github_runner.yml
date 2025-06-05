@@ -25,7 +25,7 @@ jobs:
     name: Deploy on AKS
     environment: ${{ inputs.environment }}
     steps:
-      - name: Deploy
+      - name: Deploy in ${{ inputs.environment }}
         uses: pagopa/github-actions-template/aks-deploy@main
         with:
           branch: ${{ inputs.branch }}
