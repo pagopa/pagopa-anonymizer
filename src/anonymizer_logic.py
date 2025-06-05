@@ -107,20 +107,19 @@ anonymize_keep_initials_lambda = lambda text: " ".join(
 # 4. Anonymization Operators
 # Defines how recognized PII should be replaced.
 DEFAULT_OPERATORS = {
-    "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
-    "LOCATION": OperatorConfig("replace", {"new_value": "<LOCATION>"}),
-    "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<IT_VEHICLE_PLATE>"}),
-    "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
+    # "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
+    "DEFAULT": OperatorConfig("replace", {"new_value": "<ANONYMIZED>"}),
     # You can define specific operators for different entity types:
-    # "PERSON": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "ITALIAN_ADDRESS": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "IT_VEHICLE_PLATE": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "NAV_NUMBER": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "IUV_CODE": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "MEDICAL_INFO": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "EMAIL_ADDRESS": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "PHONE_NUMBER": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
-    # "IT_FISCAL_CODE": OperatorConfig("mask", {"chars_to_mask": 3, "masking_char": "*", "from_end": True}),
+    "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
+    "ITALIAN_ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
+    "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<PLATE_NUMBER>"}),
+    "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
+    "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
+    "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "<MEDICAL_REFERENCE>"}),
+    "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
+    "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
+    "IT_FISCAL_CODE": OperatorConfig("replace", {"new_value": "<FISCAL_CODE>"}),
+
 }
 
 # 5. Entities to target for anonymization
