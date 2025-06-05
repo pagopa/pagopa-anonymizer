@@ -152,7 +152,7 @@ jobs:
       - name: Push New Version ${{ steps.bump_version.outputs.new_version }}
         shell: bash
         run: |
-          git ls-files . | grep 'pom.xml'  | xargs git add
+          git add -A
           git config --global user.email "github-bot@pagopa.it"
           git config --global user.name "pagopa-github-bot"
           git commit -m "Bump to version ${{ steps.bump_version.outputs.new_version }}" || exit 0
