@@ -1,3 +1,9 @@
+import sys
+import os
+
+## Add the directory containing your package to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
 from unittest.mock import patch, MagicMock
 import unittest
 import os
