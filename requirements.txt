@@ -3,3 +3,4 @@ it_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/it
 presidio_analyzer==2.2.358
 presidio_anonymizer==2.2.358
 configparser==7.2.0
+flask-openapi3[swagger]==4.1.0
