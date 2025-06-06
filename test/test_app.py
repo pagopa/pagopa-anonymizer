@@ -104,15 +104,15 @@ class TestAnonymizeEndpoint(unittest.TestCase):
     
     def test_anonymize_error_invalid_content_type(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json=False)
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_anonymize_error_text_missing_from_body(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": None})
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_anonymize_error_text_invalid_type(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": 2})
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     @patch("src.app.anonymize_text_with_presidio")
     def test_anonymize_error_anonymization(self, mock_config_anonymizer):

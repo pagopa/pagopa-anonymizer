@@ -38,7 +38,7 @@ def validation_error_callback(e: ValidationError) -> FlaskResponse:
     validation_error_object = ErrorResponse(error="Missing required field 'text'")
     response = make_response(validation_error_object.model_dump_json())
     response.headers["Content-Type"] = "application/json"
-    response.status_code = getattr(current_app, "validation_error_status", HTTPStatus.UNPROCESSABLE_CONTENT)
+    response.status_code = getattr(current_app, "validation_error_status", HTTPStatus.BAD_REQUEST)
     return response
 
 
@@ -46,7 +46,7 @@ app = OpenAPI(
     __name__,
     info=info,
     security_schemes=security_schemes,
-    validation_error_status=HTTPStatus.UNPROCESSABLE_CONTENT,
+    validation_error_status=HTTPStatus.BAD_REQUEST,
     validation_error_model=ErrorResponse,
     validation_error_callback=validation_error_callback)
 
