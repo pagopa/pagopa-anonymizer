@@ -15,4 +15,6 @@ resource "github_repository" "repository" {
   has_wiki             = true
   vulnerability_alerts = true
 
+  delete_branch_on_merge = true
+
 }

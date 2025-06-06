@@ -56,7 +56,7 @@ iuv_recognizer = PatternRecognizer(patterns=[iuv_pattern],
 medical_patterns = [
     Pattern(
         name="MEDICAL_MENTION",
-        regex=r"\b(?<=visita medica\s)(.*)$",
+        regex=r"\b(?<=visita\s)(.*)$",
         score=0.7
     ),
 ]
@@ -97,9 +97,17 @@ ANALYZER.registry.add_recognizer(medical_recognizer)
 # 3. Anonymizer Engine
 ANONYMIZER = AnonymizerEngine()
 
+anonymize_keep_initials_lambda = lambda text: " ".join(
+    [
+        (word[:2] + "*" * (len(word) - 2)) if word else ""
+        for word in str(text).split(' ')
+    ]
+)
+
 # 4. Anonymization Operators
 # Defines how recognized PII should be replaced.
 DEFAULT_OPERATORS = {
+    # "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
     "DEFAULT": OperatorConfig("replace", {"new_value": "<ANONYMIZED>"}),
     # You can define specific operators for different entity types:
     "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
@@ -111,6 +119,7 @@ DEFAULT_OPERATORS = {
     "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
     "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
     "IT_FISCAL_CODE": OperatorConfig("replace", {"new_value": "<FISCAL_CODE>"}),
+
 }
 
 # 5. Entities to target for anonymization
@@ -126,6 +135,7 @@ ENTITIES_TO_ANONYMIZE = [
     "DATE_TIME",   # Language agnostic but recognizes formats common in the language
     "CRYPTO",      # Language agnostic
     "NRP",         # National Registration P. (general, may need specific IT)
+    #"LOCATION",
 
     # Presidio Italian-specific built-in
     "IT_FISCAL_CODE",

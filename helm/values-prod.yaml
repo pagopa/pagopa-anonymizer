@@ -1,44 +1,46 @@
 microservice-chart:
   namespace: "shared"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-anonymizer"
   image:
     repository: ghcr.io/pagopa/pagopa-anonymizer
-    tag: "0.0.1"
+    tag: "0.0.1-1"
     pullPolicy: Always
   livenessProbe:
     httpGet:
       path: /info
-      port: 5000
+      port: 3000
     initialDelaySeconds: 60
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /info
-      port: 5000
+      port: 3000
     initialDelaySeconds: 60
     failureThreshold: 6
     periodSeconds: 10
   deployment:
     create: true
+    replicas: 1
   serviceMonitor:
     create: false
   ports:
-    - 5000 #http
+    - 3000 #http
   service:
+    create: true
     type: ClusterIP
     ports:
-      - 5000 #http
+      - 3000 #http
   ingress:
     create: true
     host: "weuprod.shared.internal.platform.pagopa.it"
     path: /pagopa-anonymizer/(.*)
-    servicePort: 5000
+    servicePort: 3000
   serviceAccount:
     name: "shared-workload-identity"
   azure:
-    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
+    workloadIdentityClientId: "TODO"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -47,14 +49,14 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "512Mi"
+      memory: "3Gi"
       cpu: "0.25"
     limits:
-      memory: "768Mi"
+      memory: "6Gi"
       cpu: "0.50"
   autoscaling:
     enable: true
-    minReplica: 2
+    minReplica: 3
     maxReplica: 10
     pollingInterval: 10 # seconds
     cooldownPeriod: 120 # seconds
@@ -66,8 +68,9 @@ microservice-chart:
           value: "75"
   envConfig:
     ENV: "prod"
-    WEBSITE_SITE_NAME: "pagopaanonymizer" # required to show cloud role name in application insights
-    FUNCTIONS_WORKER_RUNTIME: "python"
+    WEBSITE_SITE_NAME: "pagopa-anonymizer" # required to show cloud role name in application insights
+  envSecret:
+    APPLICATION_INSIGHTS_CONNECTION_STRING: ai-d-connection-string
   keyvault:
     name: "pagopa-p-shared-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
