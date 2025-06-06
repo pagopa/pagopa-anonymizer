@@ -111,6 +111,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+        with:
+          token: ${{ secrets.BOT_TOKEN_GITHUB }}
 
       - id: get_version
         name: Get Version
