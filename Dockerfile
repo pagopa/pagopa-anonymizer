@@ -7,10 +7,11 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 3000
 
 #RUN python -m compileall -q /app
 #ENV PYTHONDONTWRITEBYTECODE=1
 
-CMD ["python", "-u", "-m", "src.app"]
+#CMD ["python", "-u", "-m", "src.app"]
 
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "4", "src.app:app"]

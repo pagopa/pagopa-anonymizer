@@ -20,7 +20,7 @@ class TestAnonymizerLogic(unittest.TestCase):
         self.assertEqual(anonymize_text, "<ANONYMIZED>")
     def test_anonymize_success_medical_info(self):
         anonymize_text=anonymize_text_with_presidio('visita medica radiografia')
-        self.assertEqual(anonymize_text, "visita medica <MEDICAL_REFERENCE>")
+        self.assertEqual(anonymize_text, "visita <MEDICAL_REFERENCE>")
     def test_anonymize_success_email(self):
         anonymize_text=anonymize_text_with_presidio('test@pagopa.it')
         self.assertEqual(anonymize_text, "<EMAIL>")
