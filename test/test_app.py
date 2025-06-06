@@ -1,3 +1,9 @@
+import sys
+import os
+
+## Add the directory containing your package to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
 from unittest.mock import patch, MagicMock
 import unittest
 import os
@@ -110,9 +116,7 @@ class TestAnonymizeEndpoint(unittest.TestCase):
 
     @patch("src.app.anonymize_text_with_presidio")
     def test_anonymize_error_anonymization(self, mock_config_anonymizer):
-        def raise_ex(*args, **kwargs):
-            raise Exception("Read failed")
-        mock_config_anonymizer.return_value = raise_ex
+        mock_config_anonymizer.side_effect = Exception('Read failed')
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": TEXT_TO_ANONYM})
         self.assertEqual(response.status_code, 500)
 
