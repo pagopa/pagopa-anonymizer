@@ -139,7 +139,7 @@ ENTITIES_TO_ANONYMIZE = [
 
     # Presidio Italian-specific built-in
     "IT_FISCAL_CODE",
-    "IT_VAT_NUMBER", # Presidio uses IT_VAT_NUMBER
+    "IT_VAT_CODE",
     "IT_DRIVER_LICENSE",
     "IT_PASSPORT",
     "IT_IDENTITY_CARD",
