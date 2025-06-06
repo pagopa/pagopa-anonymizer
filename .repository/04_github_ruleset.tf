@@ -1,4 +1,3 @@
-
 # terraform import github_repository_ruleset.branch_ruleset pagopa-anonymizer:5859622
 resource "github_repository_ruleset" "branch_ruleset" {
 
@@ -17,6 +16,12 @@ resource "github_repository_ruleset" "branch_ruleset" {
   bypass_actors {
     actor_id    = 5
     actor_type  = "RepositoryRole"
+    bypass_mode = "always"
+  }
+
+  bypass_actors {
+    actor_id    = 7459289
+    actor_type  = "Team"
     bypass_mode = "always"
   }
 
