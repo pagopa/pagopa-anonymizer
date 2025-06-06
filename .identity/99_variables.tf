@@ -20,6 +20,8 @@ locals {
     name           = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-cae",
     resource_group = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-rg",
   }
+
+  terraform_version = "1.11.2"
 }
 
 variable "env" {
