@@ -34,7 +34,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
       }
     },
     "/anonymize": {
@@ -76,16 +81,6 @@
               }
             }
           },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorModel"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -95,14 +90,24 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
           {
-            "apiKey": [
-              "write:pets",
-              "read:pets"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -160,68 +165,6 @@
           }
         }
       },
-      "ValidationErrorModel": {
-        "title": "ValidationErrorModel",
-        "type": "object",
-        "properties": {
-          "loc": {
-            "title": "Location",
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "the error's location as a list. ",
-            "default": null
-          },
-          "msg": {
-            "title": "Message",
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "a computer-readable identifier of the error type.",
-            "default": null
-          },
-          "type_": {
-            "title": "Error Type",
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "a human readable explanation of the error.",
-            "default": null
-          },
-          "ctx": {
-            "title": "Error context",
-            "anyOf": [
-              {
-                "type": "object",
-                "additionalProperties": true
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "an optional object which contains values required to render the error message.",
-            "default": null
-          }
-        }
-      },
       "AnonymizeRequest": {
         "title": "AnonymizeRequest",
         "required": [
@@ -237,7 +180,13 @@
         }
       }
     },
-    "securitySchemes": null
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "api_key",
+        "in": "header"
+      }
+    }
   },
   "tags": [
     {
