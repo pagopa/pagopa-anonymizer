@@ -174,3 +174,4 @@ cython_debug/
 .idea/
 .vscode/
 /.identity/.terraform/
+/infra/.terraform/
