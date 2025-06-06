@@ -5,11 +5,10 @@ from pydantic import BaseModel, Field, ValidationError
 from flask.wrappers import Response as FlaskResponse
 from configparser import ConfigParser
 import os
-from anonymizer_logic import anonymize_text_with_presidio
+from src.anonymizer_logic import anonymize_text_with_presidio
 from pythonjsonlogger import json
 import logging
 import uuid
-
 
 # OpenAPI metadata
 info = Info(title="Anonymizer API", version="1.0.0")
