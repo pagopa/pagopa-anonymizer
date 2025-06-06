@@ -104,21 +104,19 @@ class TestAnonymizeEndpoint(unittest.TestCase):
     
     def test_anonymize_error_invalid_content_type(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json=False)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
 
     def test_anonymize_error_text_missing_from_body(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": None})
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
 
     def test_anonymize_error_text_invalid_type(self):
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": 2})
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
 
     @patch("src.app.anonymize_text_with_presidio")
     def test_anonymize_error_anonymization(self, mock_config_anonymizer):
-        def raise_ex(*args, **kwargs):
-            raise Exception("Read failed")
-        mock_config_anonymizer.return_value = raise_ex
+        mock_config_anonymizer.side_effect = Exception('Read failed')
         response = self.client.post(ANONYMIZE_ENDPOINT, json={"text": TEXT_TO_ANONYM})
         self.assertEqual(response.status_code, 500)
 
