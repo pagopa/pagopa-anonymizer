@@ -26,6 +26,9 @@ class InfoResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str
 
+class ValidationErrorModel(BaseModel):
+    error: str
+
 @app.get(
     '/info',
     tags=[info_tag],
@@ -57,10 +60,14 @@ def info():
     responses={
         200: AnonymizeResponse,
         400: ErrorResponse,
+        422: ValidationErrorModel,
         500: ErrorResponse,
     },
     summary="Anonymize text",
-    description="Anonymizes the provided text using Presidio."
+    description="Anonymizes the provided text using Presidio.",
+    security = [
+        {"apiKey": ["write:pets", "read:pets"]}
+    ],
 )
 def anonymize_endpoint(body: AnonymizeRequest):
     """

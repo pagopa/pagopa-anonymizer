@@ -76,6 +76,16 @@
               }
             }
           },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorModel"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -85,21 +95,16 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Unprocessable Content",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ValidationErrorModel"
-                  }
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "apiKey": [
+              "write:pets",
+              "read:pets"
+            ]
+          }
+        ]
       }
     }
   },
@@ -152,20 +157,6 @@
             "title": "Text",
             "type": "string",
             "description": "Anonymized text"
-          }
-        }
-      },
-      "AnonymizeRequest": {
-        "title": "AnonymizeRequest",
-        "required": [
-          "text"
-        ],
-        "type": "object",
-        "properties": {
-          "text": {
-            "title": "Text",
-            "type": "string",
-            "description": "Text to be anonymized"
           }
         }
       },
@@ -228,6 +219,20 @@
             ],
             "description": "an optional object which contains values required to render the error message.",
             "default": null
+          }
+        }
+      },
+      "AnonymizeRequest": {
+        "title": "AnonymizeRequest",
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string",
+            "description": "Text to be anonymized"
           }
         }
       }
