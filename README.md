@@ -110,7 +110,7 @@ Start the Flask development server:
 ```bash
 python3 app.py
 ```
-The application will typically be available at `http://127.0.0.1:5000/`.
+The application will typically be available at `http://127.0.0.1:3000/`.
 
 <!--
 TODO: If you create a Docker setup:
@@ -178,7 +178,7 @@ Use tools like `curl`, Postman, or Insomnia to send `POST` requests to the `/ano
 **Example using `curl`:**
 ```bash
 curl -X POST \
-  http://127.0.0.1:5000/anonymize \
+  http://127.0.0.1:3000/anonymize \
   -H 'Content-Type: application/json' \
   -d '{
     "text": "Il signor Mario Rossi vive in Via Roma 123. Contattare a mario.rossi@example.com"
