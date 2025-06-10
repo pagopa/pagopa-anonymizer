@@ -40,7 +40,7 @@ microservice-chart:
   serviceAccount:
     name: "shared-workload-identity"
   azure:
-    workloadIdentityClientId: "TODO"
+    workloadIdentityClientId: "bf178ed5-14f9-4d3a-91a5-de91baaa64f8"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
