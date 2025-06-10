@@ -107,18 +107,18 @@ anonymize_keep_initials_lambda = lambda text: " ".join(
 # 4. Anonymization Operators
 # Defines how recognized PII should be replaced.
 DEFAULT_OPERATORS = {
-    # "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
-    "DEFAULT": OperatorConfig("replace", {"new_value": "<ANONYMIZED>"}),
+    "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
+    # "DEFAULT": OperatorConfig("replace", {"new_value": "<ANONYMIZED>"}),
     # You can define specific operators for different entity types:
-    "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
-    "ITALIAN_ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
-    "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<PLATE_NUMBER>"}),
-    "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
-    "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
-    "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "<MEDICAL_REFERENCE>"}),
-    "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
-    "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
-    "IT_FISCAL_CODE": OperatorConfig("replace", {"new_value": "<FISCAL_CODE>"}),
+    # "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
+    # "ITALIAN_ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
+    # "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<PLATE_NUMBER>"}),
+    # "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
+    # "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
+    # "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "<MEDICAL_REFERENCE>"}),
+    # "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
+    # "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
+    # "IT_FISCAL_CODE": OperatorConfig("replace", {"new_value": "<FISCAL_CODE>"}),
 
 }
 

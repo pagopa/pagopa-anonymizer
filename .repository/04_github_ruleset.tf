@@ -1,4 +1,4 @@
-# terraform import github_repository_ruleset.branch_ruleset pagopa-anonymizer:5859622
+# terraform import github_repository_ruleset.branch_ruleset pagopa-anonymizer:5894392
 resource "github_repository_ruleset" "branch_ruleset" {
 
   name        = "main protection"
