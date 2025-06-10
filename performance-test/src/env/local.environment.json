@@ -1,0 +1,8 @@
+{
+  "environment": [
+    {
+      "env": "local",
+      "anonymizeUri": "http://localhost:3000/anonymize"
+    }
+  ]
+}

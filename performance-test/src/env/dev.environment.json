@@ -1,0 +1,8 @@
+{
+  "environment": [
+    {
+      "env": "dev",
+      "anonymizeUri": "https://api.dev.platform.pagopa.it/anonymizer/v1/anonymize"
+    }
+  ]
+}
