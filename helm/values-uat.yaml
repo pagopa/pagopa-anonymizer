@@ -40,7 +40,7 @@ microservice-chart:
   serviceAccount:
     name: "shared-workload-identity"
   azure:
-    workloadIdentityClientId: "TODO"
+    workloadIdentityClientId: "bf178ed5-14f9-4d3a-91a5-de91baaa64f8"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -70,7 +70,7 @@ microservice-chart:
     ENV: "uat"
     WEBSITE_SITE_NAME: "pagopa-anonymizer" # required to show cloud role name in application insights
   envSecret:
-    APPLICATION_INSIGHTS_CONNECTION_STRING: ai-d-connection-string
+    APPLICATION_INSIGHTS_CONNECTION_STRING: ai-u-connection-string
   keyvault:
     name: "pagopa-u-shared-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
