@@ -1,0 +1,8 @@
+{
+  "environment": [
+    {
+      "env": "uat",
+      "anonymizeUri": "https://api.uat.platform.pagopa.it/anonymizer/v1/anonymize"
+    }
+  ]
+}
