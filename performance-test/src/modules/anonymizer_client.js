@@ -10,5 +10,5 @@ export function anonymizePII(anonymizeUri, subKey, inputText) {
         "Content-Type": "application/json"
     };
 
-    return http.post(anonymizeUri, JSON.stringify(formData), {headers});
+    return http.post(anonymizeUri, JSON.stringify(formData), {headers, responseType: "text"});
 }

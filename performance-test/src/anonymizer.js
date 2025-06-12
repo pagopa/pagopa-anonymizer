@@ -26,7 +26,7 @@ export default function (data) {
 
   check(response, {
     'Anonymize status is 200': (response) => response.status === 200,
-    'Anonymize body not null': (response) => response.body !== null,
+    'Anonymize body not null': (response) => response.body !== null && response.body !== undefined,
     'PIIs have been anonymized': (response) => JSON.parse(response.body).text == MIXED_ANONYMIZED_TEXT
   });
 }

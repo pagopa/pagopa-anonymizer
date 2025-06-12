@@ -33,7 +33,7 @@ variables:
   ${{ if eq(parameters['ENVIRONMENT'], 'dev') }}:
     subscriptionKey: "$(DEV_SUBSCRIPTION_KEY)"
     poolImage: 'pagopa-dev-loadtest-linux'
-  ${{ if eq(parameters['ENVIRONMENT'], 'uat_java') }}:
+  ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
     subscriptionKey: "$(UAT_SUBSCRIPTION_KEY)"
     poolImage: 'pagopa-uat-loadtest-linux'
 
