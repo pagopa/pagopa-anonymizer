@@ -1,3 +1,4 @@
+import re
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
@@ -97,12 +98,35 @@ ANALYZER.registry.add_recognizer(medical_recognizer)
 # 3. Anonymizer Engine
 ANONYMIZER = AnonymizerEngine()
 
-anonymize_keep_initials_lambda = lambda text: " ".join(
+anonymize_keep_words_initials_lambda = lambda text: " ".join(
     [
-        (word[:2] + "*" * (len(word) - 2)) if word else ""
+        (word[0] + "*" * (len(word)-1)) if word else ""
         for word in str(text).split(' ')
     ]
 )
+
+anonymize_fiscal_code_lambda = lambda text: (text[:8] + "*" * (len(text) - 8)) if text else ""
+
+anonymize_keep_first_3_char_lambda = lambda text: (text[:3] + "*" * (len(text) - 3)) if text else ""
+
+anonymize_keep_ends_2_char_lambda = lambda text: (text[:2] + "*" * (len(text) - 4) + text[-2:]) if text else ""
+
+anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'[^A-Za-z ]+', '', text) if text else ""
+
+anonymize_keep_last_3_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 3) + text[-3:]) if text else ""
+
+anonymize_keep_last_4_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 4) + text[-4:]) if text else ""
+
+anonymize_keep_last_4_char_without_replacing_space_lambda = lambda text: " ".join(
+    [
+        (("*" * (len(str(text.split(" ")[x])))) if x != (len(text.split(" "))-1) else text.split(" ")[x]) if text else ""
+        for x in range(0, len(text.split(" ")))
+    ]
+)
+
+anonymize_email_lambda = lambda text: str(text).split("@")[0][0] + "*" * (len(str(text).split("@")[0]) - 2) + str(text).split("@")[0][-1] + "@" + str(text).split("@")[-1] if text else ""
+
+anonymize_keep_first_five_and_last_four_lambda = lambda text: (text[:5] + "*" * (len(text) - 9) + text[-4:]) if text else ""
 
 # 4. Anonymization Operators
 # Defines how recognized PII should be replaced.
@@ -110,16 +134,22 @@ DEFAULT_OPERATORS = {
     # "DEFAULT": OperatorConfig("custom", {"lambda": anonymize_keep_initials_lambda}),
     "DEFAULT": OperatorConfig("replace", {"new_value": "<ANONYMIZED>"}),
     # You can define specific operators for different entity types:
-    "PERSON": OperatorConfig("replace", {"new_value": "<PERSON>"}),
-    "ITALIAN_ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
-    "IT_VEHICLE_PLATE": OperatorConfig("replace", {"new_value": "<PLATE_NUMBER>"}),
+    "PERSON": OperatorConfig("custom", {"lambda": anonymize_keep_words_initials_lambda}),
+    "ITALIAN_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_keep_only_alpha_lambda}),
+    "IT_VEHICLE_PLATE": OperatorConfig("custom", {"lambda": anonymize_keep_first_3_char_lambda}),
     "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
     "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
-    "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "<MEDICAL_REFERENCE>"}),
-    "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
-    "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
-    "IT_FISCAL_CODE": OperatorConfig("replace", {"new_value": "<FISCAL_CODE>"}),
-
+    "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "***"}), # TODO
+    "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_email_lambda}),
+    "PHONE_NUMBER": OperatorConfig("custom", {"lambda": anonymize_keep_last_4_char_lambda}),
+    "IT_FISCAL_CODE": OperatorConfig("custom", {"lambda": anonymize_fiscal_code_lambda}),
+    "IT_DRIVER_LICENSE": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
+    "IT_IDENTITY_CARD": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
+    "IT_PASSPORT": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
+    "IT_VAT_NUMBER": OperatorConfig("custom", {"lambda": anonymize_keep_last_3_char_lambda}),
+    "CREDIT_CARD": OperatorConfig("custom", {"lambda": anonymize_keep_last_4_char_without_replacing_space_lambda}),
+    "IBAN_CODE": OperatorConfig("custom", {"lambda": anonymize_keep_first_five_and_last_four_lambda}),
+    "CRYPTO": OperatorConfig("custom", {"lambda": anonymize_keep_last_3_char_lambda})
 }
 
 # 5. Entities to target for anonymization
@@ -131,10 +161,10 @@ ENTITIES_TO_ANONYMIZE = [
     "PHONE_NUMBER",
     "CREDIT_CARD", # Language agnostic
     "IBAN_CODE",   # Language agnostic, but format can be country specific
-    "URL",         # Language agnostic
-    "DATE_TIME",   # Language agnostic but recognizes formats common in the language
+    #"URL",         # Language agnostic
+    #"DATE_TIME",   # Language agnostic but recognizes formats common in the language
     "CRYPTO",      # Language agnostic
-    "NRP",         # National Registration P. (general, may need specific IT)
+    "NRP",         # National Registration P. (general, may need specific IT) # TODO
     #"LOCATION",
 
     # Presidio Italian-specific built-in
