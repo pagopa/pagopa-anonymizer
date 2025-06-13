@@ -2,15 +2,14 @@ import re
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
-from utils import italian_toponym
-
+from src.utils import it_toponym, it_medical_info
 
 # Italian Address Recognizer
 # Matches common Italian street address formats.
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex=r"[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]+?,?\s*\d+[A-Za-z]?",
+        regex="("+"|".join(it_toponym)+") +"+"[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]+?,\s*\d+[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*",
         score=0.9
     ),
 ]
@@ -20,7 +19,7 @@ address_recognizer = PatternRecognizer(
     name="ItalianAddressRecognizer",
     patterns=italian_address_patterns,
     supported_language="it", # This recognizer is for Italian
-    context=italian_toponym # Context words in Italian
+    context=it_toponym # Context words in Italian
 )
 
 # Italian Vehicle Plate Recognizer
@@ -35,30 +34,30 @@ plate_recognizer = PatternRecognizer(patterns=[plate_pattern],
 
 # NAV (Numero Avviso) Recognizer
 # Matches a specific 18-digit number format.
-nav_pattern = Pattern(name="NAV_PATTERN",
-                      regex=r"\b[0-3]\d{17}\b",
-                      score=0.85)
-nav_recognizer = PatternRecognizer(patterns=[nav_pattern],
-                                   supported_entity="NAV",
-                                   name="NavRecognizer",
-                                   supported_language="it") # This recognizer is for Italian
+# nav_pattern = Pattern(name="NAV_PATTERN",
+#                       regex=r"\b[0-3]\d{17}\b",
+#                       score=0.85)
+# nav_recognizer = PatternRecognizer(patterns=[nav_pattern],
+#                                    supported_entity="NAV",
+#                                    name="NavRecognizer",
+#                                    supported_language="it") # This recognizer is for Italian
 
-# IUV (Identificativo Univoco di Versamento - Unique Payment Identifier) Recognizer
-# Matches a specific 17-digit number format.
-iuv_pattern = Pattern(name="IUV_PATTERN",
-                      regex=r"\b\d{17}\b", # Simplified from original, assuming it's exactly 17 digits
-                      score=0.8)
-iuv_recognizer = PatternRecognizer(patterns=[iuv_pattern],
-                                   supported_entity="IUV",
-                                   name="IuvRecognizer",
-                                   supported_language="it") # This recognizer is for Italian
+# # IUV (Identificativo Univoco di Versamento - Unique Payment Identifier) Recognizer
+# # Matches a specific 17-digit number format.
+# iuv_pattern = Pattern(name="IUV_PATTERN",
+#                       regex=r"\b\d{17}\b", # Simplified from original, assuming it's exactly 17 digits
+#                       score=0.8)
+# iuv_recognizer = PatternRecognizer(patterns=[iuv_pattern],
+#                                    supported_entity="IUV",
+#                                    name="IuvRecognizer",
+#                                    supported_language="it") # This recognizer is for Italian
 
 # Medical Information Recognizer
 # This pattern is for Italian "visita medica".
 medical_patterns = [
     Pattern(
-        name="MEDICAL_MENTION",
-        regex=r"\b(?<=visita\s)(.*)$",
+        name="MEDICAL_INFO_PATTERN",
+        regex=r"\W("+"|".join(it_medical_info)+")",
         score=0.7
     ),
 ]
@@ -67,7 +66,7 @@ medical_recognizer = PatternRecognizer(
     name="MedicalInfoRecognizer",
     patterns=medical_patterns,
     supported_language="it", # This recognizer is for Italian
-    context=["visita", "medica", "ospedale", "dottore", "cura", "terapia", "diagnosi"] # Context words in Italian
+    context=it_medical_info # Context words in Italian
 )
 
 
@@ -91,8 +90,8 @@ ANALYZER = AnalyzerEngine(
 # Add custom recognizers
 ANALYZER.registry.add_recognizer(address_recognizer)
 ANALYZER.registry.add_recognizer(plate_recognizer)
-ANALYZER.registry.add_recognizer(nav_recognizer)
-ANALYZER.registry.add_recognizer(iuv_recognizer)
+# ANALYZER.registry.add_recognizer(nav_recognizer)
+# ANALYZER.registry.add_recognizer(iuv_recognizer)
 ANALYZER.registry.add_recognizer(medical_recognizer)
 # Presidio's default recognizers for "it" will also be active.
 
@@ -112,18 +111,13 @@ anonymize_keep_first_3_char_lambda = lambda text: (text[:3] + "*" * (len(text) -
 
 anonymize_keep_ends_2_char_lambda = lambda text: (text[:2] + "*" * (len(text) - 4) + text[-2:]) if text else ""
 
-anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'[^A-ZÀ-Üa-zà-ü ]+', '', text).strip(" ") if text else ""
+anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'\d+', '', text).strip() if text else ""
 
 anonymize_keep_last_3_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 3) + text[-3:]) if text else ""
 
 anonymize_keep_last_4_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 4) + text[-4:]) if text else ""
 
-anonymize_keep_last_4_char_without_replacing_space_lambda = lambda text: " ".join(
-    [
-        (("*" * (len(str(text.split(" ")[x])))) if x != (len(text.split(" "))-1) else text.split(" ")[x]) if text else ""
-        for x in range(0, len(text.split(" ")))
-    ]
-)
+anonymize_keep_last_4_char_without_replacing_space_lambda = lambda text: (re.sub(r"\d", "*", text))[:-4] + text[-4:] if text else ""
 
 anonymize_email_lambda = lambda text: str(text).split("@")[0][0] + "*" * (len(str(text).split("@")[0]) - 2) + str(text).split("@")[0][-1] + "@" + str(text).split("@")[-1] if text else ""
 
@@ -138,16 +132,16 @@ DEFAULT_OPERATORS = {
     "PERSON": OperatorConfig("custom", {"lambda": anonymize_keep_words_initials_lambda}),
     "ITALIAN_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_keep_only_alpha_lambda}),
     "IT_VEHICLE_PLATE": OperatorConfig("custom", {"lambda": anonymize_keep_first_3_char_lambda}),
-    "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
-    "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
-    "MEDICAL_INFO": OperatorConfig("replace", {"new_value": "***"}), # TODO
+    #"NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
+    #"IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
+    "MEDICAL_INFO": OperatorConfig("custom", {"lambda": lambda _: ""}),
     "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_email_lambda}),
     "PHONE_NUMBER": OperatorConfig("custom", {"lambda": anonymize_keep_last_4_char_lambda}),
     "IT_FISCAL_CODE": OperatorConfig("custom", {"lambda": anonymize_fiscal_code_lambda}),
     "IT_DRIVER_LICENSE": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
     "IT_IDENTITY_CARD": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
     "IT_PASSPORT": OperatorConfig("custom", {"lambda": anonymize_keep_ends_2_char_lambda}),
-    "IT_VAT_NUMBER": OperatorConfig("custom", {"lambda": anonymize_keep_last_3_char_lambda}),
+    "IT_VAT_CODE": OperatorConfig("custom", {"lambda": anonymize_keep_last_3_char_lambda}),
     "CREDIT_CARD": OperatorConfig("custom", {"lambda": anonymize_keep_last_4_char_without_replacing_space_lambda}),
     "IBAN_CODE": OperatorConfig("custom", {"lambda": anonymize_keep_first_five_and_last_four_lambda}),
     "CRYPTO": OperatorConfig("custom", {"lambda": anonymize_keep_last_3_char_lambda})
@@ -165,12 +159,12 @@ ENTITIES_TO_ANONYMIZE = [
     #"URL",         # Language agnostic
     #"DATE_TIME",   # Language agnostic but recognizes formats common in the language
     "CRYPTO",      # Language agnostic
-    "NRP",         # National Registration P. (general, may need specific IT) # TODO
+    #"NRP",         # National Registration P. (general, may need specific IT)
     #"LOCATION",
 
     # Presidio Italian-specific built-in
     "IT_FISCAL_CODE",
-    "IT_VAT_NUMBER", # Presidio uses IT_VAT_NUMBER
+    "IT_VAT_CODE", # Presidio uses IT_VAT_CODE
     "IT_DRIVER_LICENSE",
     "IT_PASSPORT",
     "IT_IDENTITY_CARD",
@@ -178,8 +172,8 @@ ENTITIES_TO_ANONYMIZE = [
     # custom entities (ensure names match `supported_entity` in recognizers)
     "ITALIAN_ADDRESS",
     "IT_VEHICLE_PLATE",
-    "NAV",
-    "IUV",
+    #"NAV",
+    #"IUV",
     "MEDICAL_INFO"
 ]
 
