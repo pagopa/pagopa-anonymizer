@@ -7,8 +7,45 @@ class TestAnonymizerLogic(unittest.TestCase):
         anonymize_text=anonymize_text_with_presidio('multa a Luca Rossi')
         self.assertEqual(anonymize_text, "multa a L*** R****")
     def test_anonymize_success_address(self):
-        anonymize_text=anonymize_text_with_presidio('Indirizzo Via umberto I n.54')
-        self.assertEqual(anonymize_text, "Indirizzo Via umberto I n")
+        test_cases = [
+            ("Via", "Indirizzo Via Umberto I n.54, 00184 Roma RM", "Indirizzo Via Umberto I n, Roma RM"),
+            ("Viale", "Indirizzo Viale Europa 12, 20126 Milano MI", "Indirizzo Viale Europa, Milano MI"),
+            ("Corso", "Indirizzo Corso Italia 33, 56125 Pisa PI", "Indirizzo Corso Italia, Pisa PI"),
+            ("Strada", "Indirizzo Strada Statale 45, 43123 Parma PR", "Indirizzo Strada Statale, Parma PR"),
+            ("Stradone", "Indirizzo Stradone Vecchio 7, 37129 Verona VR", "Indirizzo Stradone Vecchio, Verona VR"),
+            ("Circonvallazione", "Indirizzo Circonvallazione Sud 101, 40121 Bologna BO", "Indirizzo Circonvallazione Sud, Bologna BO"),
+            ("Piazzale", "Indirizzo Piazzale Roma 2, 30135 Venezia VE", "Indirizzo Piazzale Roma, Venezia VE"),
+            ("Piazza", "Indirizzo Piazza Garibaldi 8, 80142 Napoli NA", "Indirizzo Piazza Garibaldi, Napoli NA"),
+            ("Piazzetta", "Indirizzo Piazzetta San Marco 5, 80132 Napoli NA", "Indirizzo Piazzetta San Marco, Napoli NA"),
+            ("Largo", "Indirizzo Largo Augusto 10, 20122 Milano MI", "Indirizzo Largo Augusto, Milano MI"),
+            ("Rotonda", "Indirizzo Rotonda dei Mille 3, 10123 Torino TO", "Indirizzo Rotonda dei Mille, Torino TO"),
+            ("Vicolo", "Indirizzo Vicolo Stretto 4, 95131 Catania CT", "Indirizzo Vicolo Stretto, Catania CT"),
+            ("Traversa", "Indirizzo Traversa Nuova 9, 80143 Napoli NA", "Indirizzo Traversa Nuova, Napoli NA"),
+            ("Rampa", "Indirizzo Rampa della Vittoria 6, 16121 Genova GE", "Indirizzo Rampa della Vittoria, Genova GE"),
+            ("Salita", "Indirizzo Salita Castello 11, 16123 Genova GE", "Indirizzo Salita Castello, Genova GE"),
+            ("Discesa", "Indirizzo Discesa Mare 13, 90133 Palermo PA", "Indirizzo Discesa Mare, Palermo PA"),
+            ("Spalto", "Indirizzo Spalto Marengo 15, 15121 Alessandria AL", "Indirizzo Spalto Marengo, Alessandria AL"),
+            ("Passeggiata", "Indirizzo Passeggiata Lungomare 18, 17021 Alassio SV", "Indirizzo Passeggiata Lungomare, Alassio SV"),
+            ("Località", "Indirizzo Località Bosco 21, 52010 Subbiano AR", "Indirizzo Località Bosco, Subbiano AR"),
+            ("Contrada", "Indirizzo Contrada Colle 23, 66020 San Giovanni CH", "Indirizzo Contrada Colle, San Giovanni CH"),
+            ("Ruga", "Indirizzo Ruga Rialto 25, 30125 Venezia VE", "Indirizzo Ruga Rialto, Venezia VE"),
+            ("Rio Terà", "Indirizzo Rio Terà San Leonardo 27, 30121 Venezia VE", "Indirizzo Rio Terà San Leonardo, Venezia VE"),
+            ("Salizada", "Indirizzo Salizada San Giovanni 29, 30122 Venezia VE", "Indirizzo Salizada San Giovanni, Venezia VE"),
+            ("Fondamenta", "Indirizzo Fondamenta Nove 31, 30121 Venezia VE", "Indirizzo Fondamenta Nove, Venezia VE"),
+            ("Calle", "Indirizzo Calle Larga 33, 30124 Venezia VE", "Indirizzo Calle Larga, Venezia VE"),
+            ("Campo", "Indirizzo Campo Santa Margherita 35, 30123 Venezia VE", "Indirizzo Campo Santa Margherita, Venezia VE"),
+            ("Sottoportego", "Indirizzo Sottoportego del Forno 37, 30121 Venezia VE", "Indirizzo Sottoportego del Forno, Venezia VE"),
+            ("Corticella", "Indirizzo Corticella San Marco 39, 40121 Bologna BO", "Indirizzo Corticella San Marco, Bologna BO"),
+            ("Chiasso", "Indirizzo Chiasso delle Monache 41, 22100 Como CO", "Indirizzo Chiasso delle Monache, Como CO"),
+            ("Angiporto", "Indirizzo Angiporto Galleria 43, 80132 Napoli NA", "Indirizzo Angiporto Galleria, Napoli NA"),
+        ]
+        for toponym, input_text, expected in test_cases:
+            anonymize_text = anonymize_text_with_presidio(input_text)
+            self.assertEqual(
+                anonymize_text, expected,
+                msg=f"Failed for toponym: {toponym}"
+            )
+
     def test_anonymize_success_vehicle_plate(self):
         anonymize_text=anonymize_text_with_presidio('Macchina HA011HA')
         self.assertEqual(anonymize_text, "Macchina HA0****")

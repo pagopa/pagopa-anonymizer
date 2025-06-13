@@ -2,6 +2,7 @@ import re
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
+from utils import italian_toponym
 
 
 # Italian Address Recognizer
@@ -9,7 +10,7 @@ from presidio_anonymizer import AnonymizerEngine, OperatorConfig
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex=r"(Via|Viale|Piazza|Corso|Largo|Strada|Contrada|Borgo|Salita|Calata|Passeggiata) +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]+?,?\s*\d+[A-Za-z]?",
+        regex=r"[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]+?,?\s*\d+[A-Za-z]?",
         score=0.9
     ),
 ]
@@ -19,7 +20,7 @@ address_recognizer = PatternRecognizer(
     name="ItalianAddressRecognizer",
     patterns=italian_address_patterns,
     supported_language="it", # This recognizer is for Italian
-    context=["indirizzo", "residenza", "sede legale", "via", "piazza", "corso"] # Context words in Italian
+    context=italian_toponym # Context words in Italian
 )
 
 # Italian Vehicle Plate Recognizer
@@ -111,7 +112,7 @@ anonymize_keep_first_3_char_lambda = lambda text: (text[:3] + "*" * (len(text) -
 
 anonymize_keep_ends_2_char_lambda = lambda text: (text[:2] + "*" * (len(text) - 4) + text[-2:]) if text else ""
 
-anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'[^A-Za-z ]+', '', text) if text else ""
+anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'[^A-ZÀ-Üa-zà-ü ]+', '', text).strip(" ") if text else ""
 
 anonymize_keep_last_3_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 3) + text[-3:]) if text else ""
 
