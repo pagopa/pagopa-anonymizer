@@ -9,7 +9,7 @@ from src.utils import it_toponym, it_medical_info
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex="("+"|".join(it_toponym)+") +"+"[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]+?,\s*\d+[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*",
+        regex="("+"|".join(it_toponym)+") +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*,?\s*\d*[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*?",
         score=0.9
     ),
 ]
@@ -111,7 +111,7 @@ anonymize_keep_first_3_char_lambda = lambda text: (text[:3] + "*" * (len(text) -
 
 anonymize_keep_ends_2_char_lambda = lambda text: (text[:2] + "*" * (len(text) - 4) + text[-2:]) if text else ""
 
-anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'\d+', '', text).strip() if text else ""
+anonymize_keep_only_alpha_lambda = lambda text: re.sub(r'[,.:\d]+', '', text).strip() if text else ""
 
 anonymize_keep_last_3_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 3) + text[-3:]) if text else ""
 
