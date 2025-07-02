@@ -44,7 +44,7 @@ data "azurerm_key_vault_secret" "key_vault_cucumber_token" {
 }
 data "azurerm_key_vault_secret" "key_vault_slack_webhook_deploy" {
   name         = "pagopa-pagamenti-deploy-slack-webhook"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
 
 data "azurerm_key_vault_secret" "key_vault_integration_test_subkey" {
