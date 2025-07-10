@@ -60,9 +60,9 @@ info_tag = Tag(name="Info", description="Liveness & readiness endpoints")
 anonymize_tag = Tag(name="Anonymize", description="Text anonymization endpoints")
 
 api_key = {
-  "type": "apiKey",
-  "name": "api_key",
-  "in": "header"
+    "type": "apiKey",
+    "name": "api_key",
+    "in": "header"
 }
 security_schemes = {"api_key": api_key}
 security = [{"api_key": []}]
@@ -158,7 +158,7 @@ def anonymize_endpoint(body: AnonymizeRequest):
             return {"error": "The 'text' field must be a string"}, 400
 
         logger.debug("Start text anonymize")
-        anonymized_text_output = anonymize_text_with_presidio(input_text, logger)
+        anonymized_text_output = anonymize_text_with_presidio(input_text)
         logger.debug("End text anonymize")
 
         return {"text": anonymized_text_output}, 200

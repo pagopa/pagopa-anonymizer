@@ -1,6 +1,4 @@
 import re
-import logging
-import traceback
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
@@ -11,7 +9,7 @@ from src.utils import it_toponym, it_medical_info
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex="("+"|".join(it_toponym)+") +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*,?\s*\d*[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*?",
+        regex="(" + "|".join(it_toponym) + ") +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*,?\s*\d*[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*?",
         score=0.9
     ),
 ]
@@ -20,8 +18,8 @@ address_recognizer = PatternRecognizer(
     supported_entity="ITALIAN_ADDRESS",
     name="ItalianAddressRecognizer",
     patterns=italian_address_patterns,
-    supported_language="it", # This recognizer is for Italian
-    context=it_toponym # Context words in Italian
+    supported_language="it",  # This recognizer is for Italian
+    context=it_toponym  # Context words in Italian
 )
 
 # Italian Vehicle Plate Recognizer
@@ -32,7 +30,7 @@ plate_pattern = Pattern(name="IT_VEHICLE_PLATE_PATTERN",
 plate_recognizer = PatternRecognizer(patterns=[plate_pattern],
                                      supported_entity="IT_VEHICLE_PLATE",
                                      name="ItalianVehiclePlateRecognizer",
-                                     supported_language="it") # This recognizer is for Italian
+                                     supported_language="it")  # This recognizer is for Italian
 
 # NAV (Numero Avviso) Recognizer
 # Matches a specific 18-digit number format.
@@ -59,18 +57,17 @@ plate_recognizer = PatternRecognizer(patterns=[plate_pattern],
 medical_patterns = [
     Pattern(
         name="MEDICAL_INFO_PATTERN",
-        regex=r"\W("+"|".join(it_medical_info)+")",
+        regex=r"\W(" + "|".join(it_medical_info) + ")",
         score=0.7
     ),
 ]
 medical_recognizer = PatternRecognizer(
-    supported_entity="MEDICAL_INFO", # Generic entity for medical-related information
+    supported_entity="MEDICAL_INFO",  # Generic entity for medical-related information
     name="MedicalInfoRecognizer",
     patterns=medical_patterns,
-    supported_language="it", # This recognizer is for Italian
-    context=it_medical_info # Context words in Italian
+    supported_language="it",  # This recognizer is for Italian
+    context=it_medical_info  # Context words in Italian
 )
-
 
 # --- Presidio Configuration ---
 
@@ -87,7 +84,7 @@ NLP_ENGINE = PROVIDER.create_engine()
 # 2. Analyzer Engine
 ANALYZER = AnalyzerEngine(
     nlp_engine=NLP_ENGINE,
-    supported_languages=["it"] # Specify that the analyzer supports Italian
+    supported_languages=["it"]  # Specify that the analyzer supports Italian
 )
 # Add custom recognizers
 ANALYZER.registry.add_recognizer(address_recognizer)
@@ -102,7 +99,7 @@ ANONYMIZER = AnonymizerEngine()
 
 anonymize_keep_words_initials_lambda = lambda text: " ".join(
     [
-        (word[0] + "*" * (len(word)-1)) if word else ""
+        (word[0] + "*" * (len(word) - 1)) if word else ""
         for word in str(text).split(' ')
     ]
 )
@@ -119,11 +116,14 @@ anonymize_keep_last_3_char_lambda = lambda text: ("*" * (len(text.replace(" ", "
 
 anonymize_keep_last_4_char_lambda = lambda text: ("*" * (len(text.replace(" ", "")) - 4) + text[-4:]) if text else ""
 
-anonymize_keep_last_4_char_without_replacing_space_lambda = lambda text: (re.sub(r"\d", "*", text))[:-4] + text[-4:] if text else ""
+anonymize_keep_last_4_char_without_replacing_space_lambda = lambda text: (re.sub(r"\d", "*", text))[:-4] + text[
+                                                                                                           -4:] if text else ""
 
-anonymize_email_lambda = lambda text: str(text).split("@")[0][0] + "*" * (len(str(text).split("@")[0]) - 2) + str(text).split("@")[0][-1] + "@" + str(text).split("@")[-1] if text else ""
+anonymize_email_lambda = lambda text: str(text).split("@")[0][0] + "*" * (len(str(text).split("@")[0]) - 2) + \
+                                      str(text).split("@")[0][-1] + "@" + str(text).split("@")[-1] if text else ""
 
-anonymize_keep_first_five_and_last_four_lambda = lambda text: (text[:5] + "*" * (len(text) - 9) + text[-4:]) if text else ""
+anonymize_keep_first_five_and_last_four_lambda = lambda text: (
+        text[:5] + "*" * (len(text) - 9) + text[-4:]) if text else ""
 
 # 4. Anonymization Operators
 # Defines how recognized PII should be replaced.
@@ -134,8 +134,8 @@ DEFAULT_OPERATORS = {
     "PERSON": OperatorConfig("custom", {"lambda": anonymize_keep_words_initials_lambda}),
     "ITALIAN_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_keep_only_alpha_lambda}),
     "IT_VEHICLE_PLATE": OperatorConfig("custom", {"lambda": anonymize_keep_first_3_char_lambda}),
-    #"NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
-    #"IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
+    # "NAV_NUMBER": OperatorConfig("replace", {"new_value": "<NAV>"}),
+    # "IUV_CODE": OperatorConfig("replace", {"new_value": "<IUV>"}),
     "MEDICAL_INFO": OperatorConfig("custom", {"lambda": lambda _: ""}),
     "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": anonymize_email_lambda}),
     "PHONE_NUMBER": OperatorConfig("custom", {"lambda": anonymize_keep_last_4_char_lambda}),
@@ -156,17 +156,17 @@ ENTITIES_TO_ANONYMIZE = [
     "PERSON",
     "EMAIL_ADDRESS",
     "PHONE_NUMBER",
-    "CREDIT_CARD", # Language agnostic
-    "IBAN_CODE",   # Language agnostic, but format can be country specific
-    #"URL",         # Language agnostic
-    #"DATE_TIME",   # Language agnostic but recognizes formats common in the language
-    "CRYPTO",      # Language agnostic
-    #"NRP",         # National Registration P. (general, may need specific IT)
-    #"LOCATION",
+    "CREDIT_CARD",  # Language agnostic
+    "IBAN_CODE",  # Language agnostic, but format can be country specific
+    # "URL",         # Language agnostic
+    # "DATE_TIME",   # Language agnostic but recognizes formats common in the language
+    "CRYPTO",  # Language agnostic
+    # "NRP",         # National Registration P. (general, may need specific IT)
+    # "LOCATION",
 
     # Presidio Italian-specific built-in
     "IT_FISCAL_CODE",
-    "IT_VAT_CODE", # Presidio uses IT_VAT_CODE
+    "IT_VAT_CODE",  # Presidio uses IT_VAT_CODE
     "IT_DRIVER_LICENSE",
     "IT_PASSPORT",
     "IT_IDENTITY_CARD",
@@ -174,35 +174,25 @@ ENTITIES_TO_ANONYMIZE = [
     # custom entities (ensure names match `supported_entity` in recognizers)
     "ITALIAN_ADDRESS",
     "IT_VEHICLE_PLATE",
-    #"NAV",
-    #"IUV",
+    # "NAV",
+    # "IUV",
     "MEDICAL_INFO"
 ]
 
 
-def anonymize_text_with_presidio(text_to_anonymize: str, logger: logging.Logger) -> str:
+def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
     """
     Anonymizes the input text using the configured Presidio Analyzer and Anonymizer.
     The current configuration is primarily for Italian text.
     """
-    try:
-        analyzer_results = ANALYZER.analyze(
-            text=text_to_anonymize,
-            entities=ENTITIES_TO_ANONYMIZE,
-            language="it"  # Crucial to specify the language of the text
-        )
-        anonymized_result = ANONYMIZER.anonymize(
-            text=text_to_anonymize,
-            analyzer_results=analyzer_results,
-            operators=DEFAULT_OPERATORS
-        )
-        return anonymized_result.text
-    except Exception as e:
-        logger.exception("Error during Presidio anonymization", extra={
-            "error.message": str(e),
-            "error.type": type(e).__name__,
-            "error.stack_trace": traceback.format_exc()
-        })
-        # Decide on fallback behavior: return original text, or an error message
-        return f"Error during anonymization: {text_to_anonymize}"
-
+    analyzer_results = ANALYZER.analyze(
+        text=text_to_anonymize,
+        entities=ENTITIES_TO_ANONYMIZE,
+        language="it"  # Crucial to specify the language of the text
+    )
+    anonymized_result = ANONYMIZER.anonymize(
+        text=text_to_anonymize,
+        analyzer_results=analyzer_results,
+        operators=DEFAULT_OPERATORS
+    )
+    return anonymized_result.text
