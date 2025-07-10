@@ -1,4 +1,6 @@
 import re
+import logging
+import traceback
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
@@ -178,7 +180,7 @@ ENTITIES_TO_ANONYMIZE = [
 ]
 
 
-def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
+def anonymize_text_with_presidio(text_to_anonymize: str, logger: logging.Logger) -> str:
     """
     Anonymizes the input text using the configured Presidio Analyzer and Anonymizer.
     The current configuration is primarily for Italian text.
@@ -187,7 +189,7 @@ def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
         analyzer_results = ANALYZER.analyze(
             text=text_to_anonymize,
             entities=ENTITIES_TO_ANONYMIZE,
-            language="it" # Crucial to specify the language of the text
+            language="it"  # Crucial to specify the language of the text
         )
         anonymized_result = ANONYMIZER.anonymize(
             text=text_to_anonymize,
@@ -196,8 +198,11 @@ def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
         )
         return anonymized_result.text
     except Exception as e:
-        # In a real application, you would use proper logging
-        print(f"Error during Presidio anonymization: {e}")
+        logger.exception("Error during Presidio anonymization", extra={
+            "error.message": str(e),
+            "error.type": type(e).__name__,
+            "error.stack_trace": traceback.format_exc()
+        })
         # Decide on fallback behavior: return original text, or an error message
         return f"Error during anonymization: {text_to_anonymize}"
 

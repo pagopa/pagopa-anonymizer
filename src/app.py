@@ -1,11 +1,54 @@
+import os
+import logging
+import traceback
 from http import HTTPStatus
 from flask import current_app, make_response
 from flask_openapi3 import OpenAPI, Info, Tag
 from pydantic import BaseModel, Field, ValidationError
 from flask.wrappers import Response as FlaskResponse
 from configparser import ConfigParser
-import os
 from src.anonymizer_logic import anonymize_text_with_presidio
+from pythonjsonlogger.json import JsonFormatter
+
+
+# Define logger
+class ECSContextFilter(logging.Filter):
+    def __init__(self):
+        super().__init__()
+        try:
+            config = ConfigParser()
+            config.read('setup.cfg')
+            self.ecs_fields = {
+                "service.name": config.get("metadata", "name"),
+                "service.version": config.get("metadata", "version"),
+                "service.environment": os.getenv("ENV", "not specified"),
+            }
+        except Exception as e:
+            logging.getLogger().exception("Error building logger properties", extra={
+                "error.message": str(e),
+                "error.type": type(e).__name__,
+                "error.stack_trace": traceback.format_exc()
+            })
+
+    def filter(self, record):
+        for key, value in self.ecs_fields.items():
+            setattr(record, key, value)
+        return True
+
+
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+
+formatter = JsonFormatter(
+    '%(asctime)s %(levelname)s %(message)s %(service.name)s %(service.version)s %(service.environment)s '
+    '%(error.type)s %(error.message)s %(error.stack_trace)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.addFilter(ECSContextFilter())
+
+log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_str, logging.INFO)
+logger.setLevel(log_level)
 
 # OpenAPI metadata
 info = Info(title="Anonymizer API", version="1.0.0")
@@ -20,19 +63,24 @@ api_key = {
 security_schemes = {"api_key": api_key}
 security = [{"api_key": []}]
 
+
 class AnonymizeRequest(BaseModel):
     text: str = Field(..., description="Text to be anonymized")
 
+
 class AnonymizeResponse(BaseModel):
     text: str = Field(..., description="Anonymized text")
+
 
 class InfoResponse(BaseModel):
     name: str
     version: str
     environment: str
 
+
 class ErrorResponse(BaseModel):
     error: str
+
 
 def validation_error_callback(e: ValidationError) -> FlaskResponse:
     validation_error_object = ErrorResponse(error="Missing required field 'text'")
@@ -49,6 +97,7 @@ app = OpenAPI(
     validation_error_status=HTTPStatus.BAD_REQUEST,
     validation_error_model=ErrorResponse,
     validation_error_callback=validation_error_callback)
+
 
 @app.get(
     '/info',
@@ -73,8 +122,13 @@ def info():
         return {"name": app_name, "version": app_version, "environment": os.getenv("ENV", "not specified")}, 200
 
     except Exception as e:
-        app.logger.error(f"Error in /info endpoint: {str(e)}")
+        logger.exception("Error in /info endpoint", extra={
+            "error.message": str(e),
+            "error.type": type(e).__name__,
+            "error.stack_trace": traceback.format_exc()
+        })
         return {"error": "An internal server error occurred"}, 500
+
 
 @app.post(
     '/anonymize',
@@ -96,15 +150,23 @@ def anonymize_endpoint(body: AnonymizeRequest):
         input_text = body.text
 
         if not isinstance(input_text, str):
+            logger.error("The 'text' field must be a string")
             return {"error": "The 'text' field must be a string"}, 400
 
-        anonymized_text_output = anonymize_text_with_presidio(input_text)
-        
+        logger.debug("Start text anonymize")
+        anonymized_text_output = anonymize_text_with_presidio(input_text, logger)
+        logger.debug("End text anonymize")
+
         return {"text": anonymized_text_output}, 200
 
     except Exception as e:
-        app.logger.error(f"Error in /anonymize endpoint: {str(e)}")
+        logger.exception("Error in /anonymize endpoint", extra={
+            "error.message": str(e),
+            "error.type": type(e).__name__,
+            "error.stack_trace": traceback.format_exc()
+        })
         return {"error": "An internal server error occurred"}, 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
