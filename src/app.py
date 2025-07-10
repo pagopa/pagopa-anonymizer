@@ -26,9 +26,9 @@ class ECSContextFilter(logging.Filter):
             }
         except Exception as e:
             logging.getLogger().exception("Error building logger properties", extra={
-                "error.message": str(e),
-                "error.type": type(e).__name__,
-                "error.stack_trace": traceback.format_exc()
+                ERROR_MESSAGE: str(e),
+                ERROR_TYPE: type(e).__name__,
+                ERROR_STACK_TRACE: traceback.format_exc()
             })
 
     def filter(self, record):
@@ -37,6 +37,9 @@ class ECSContextFilter(logging.Filter):
         return True
 
 
+ERROR_MESSAGE = "error.message"
+ERROR_TYPE = "error.type"
+ERROR_STACK_TRACE = "error.stack_trace"
 logger = logging.getLogger()
 handler = RotatingFileHandler('app.log', maxBytes=2000, backupCount=5)
 
@@ -124,9 +127,9 @@ def info():
 
     except Exception as e:
         logger.exception("Error in /info endpoint", extra={
-            "error.message": str(e),
-            "error.type": type(e).__name__,
-            "error.stack_trace": traceback.format_exc()
+            ERROR_MESSAGE: str(e),
+            ERROR_TYPE: type(e).__name__,
+            ERROR_STACK_TRACE: traceback.format_exc()
         })
         return {"error": "An internal server error occurred"}, 500
 
@@ -162,9 +165,9 @@ def anonymize_endpoint(body: AnonymizeRequest):
 
     except Exception as e:
         logger.exception("Error in /anonymize endpoint", extra={
-            "error.message": str(e),
-            "error.type": type(e).__name__,
-            "error.stack_trace": traceback.format_exc()
+            ERROR_MESSAGE: str(e),
+            ERROR_TYPE: type(e).__name__,
+            ERROR_STACK_TRACE: traceback.format_exc()
         })
         return {"error": "An internal server error occurred"}, 500
 
