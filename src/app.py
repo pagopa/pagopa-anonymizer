@@ -9,6 +9,7 @@ from flask.wrappers import Response as FlaskResponse
 from configparser import ConfigParser
 from src.anonymizer_logic import anonymize_text_with_presidio
 from pythonjsonlogger.json import JsonFormatter
+from logging.handlers import RotatingFileHandler
 
 
 # Define logger
@@ -37,7 +38,7 @@ class ECSContextFilter(logging.Filter):
 
 
 logger = logging.getLogger()
-handler = logging.StreamHandler()
+handler = RotatingFileHandler('app.log', maxBytes=2000, backupCount=5)
 
 formatter = JsonFormatter(
     '%(asctime)s %(levelname)s %(message)s %(service.name)s %(service.version)s %(service.environment)s '
