@@ -13,7 +13,6 @@ from configparser import ConfigParser
 from src.anonymizer_logic import anonymize_text_with_presidio
 from pythonjsonlogger.json import JsonFormatter
 from functools import wraps
-from http import HTTPStatus
 
 
 # Define logger
@@ -117,7 +116,8 @@ app = OpenAPI(
     validation_error_callback=validation_error_callback)
 
 # Inherit handlers and log level from root logger
-app.logger.handlers = logger.handlers
+app.logger.handlers.extend(logging.getLogger('gunicorn.error').handlers)
+app.logger.handlers.extend(logger.handlers)
 app.logger.setLevel(logger.level)
 
 
