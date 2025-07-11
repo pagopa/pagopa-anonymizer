@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-anonymizer"
   image:
     repository: ghcr.io/pagopa/pagopa-anonymizer
-    tag: "0.2.2-2"
+    tag: "0.2.2-3"
     pullPolicy: Always
   livenessProbe:
     httpGet:
