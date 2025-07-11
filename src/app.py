@@ -115,11 +115,6 @@ app = OpenAPI(
     validation_error_model=ErrorResponse,
     validation_error_callback=validation_error_callback)
 
-# Inherit handlers and log level from root logger
-app.logger.handlers.extend(logging.getLogger('gunicorn.error').handlers)
-app.logger.handlers.extend(logger.handlers)
-app.logger.setLevel(logger.level)
-
 
 def ecs_logger(method_name: str):
     def decorator(func):
@@ -139,7 +134,7 @@ def ecs_logger(method_name: str):
             }
 
             try:
-                app.logger.info(f"Invoking API operation {method_name}", extra=g.extra_fields)
+                logger.info(f"Invoking API operation {method_name}", extra=g.extra_fields)
 
                 # Execute the function
                 result = func(*args, **kwargs)
@@ -153,7 +148,7 @@ def ecs_logger(method_name: str):
 
                 if status_code == 200:
                     # Log success
-                    app.logger.info(f"Successful API operation {method_name}", extra={
+                    logger.info(f"Successful API operation {method_name}", extra={
                         **g.extra_fields,
                         "responseTime": response_time,
                         "status": "OK",
@@ -164,7 +159,7 @@ def ecs_logger(method_name: str):
                     body = result.get_data(as_text=True)
                     json_data = json.loads(body)
                     error = json_data.get("error")
-                    app.logger.exception(f"Failed API operation {method_name}", extra={
+                    logger.exception(f"Failed API operation {method_name}", extra={
                         **g.extra_fields,
                         "status": "KO",
                         "httpCode": status_code,
@@ -175,7 +170,7 @@ def ecs_logger(method_name: str):
                 return result
 
             except Exception as e:
-                app.logger.exception(f"Failed API operation {method_name}", extra={
+                logger.exception(f"Failed API operation {method_name}", extra={
                     **g.extra_fields,
                     "status": "KO",
                     "httpCode": 500,
@@ -213,7 +208,7 @@ def info():
         return {"name": app_name, "version": app_version, "environment": os.getenv("ENV", "not specified")}, 200
 
     except Exception as e:
-        app.logger.exception("Error in /info endpoint", extra={
+        logger.exception("Error in /info endpoint", extra={
             **g.extra_fields,
             ERROR_MESSAGE: str(e),
             ERROR_TYPE: type(e).__name__,
@@ -243,17 +238,17 @@ def anonymize_endpoint(body: AnonymizeRequest):
         input_text = body.text
 
         if not isinstance(input_text, str):
-            app.logger.error("The 'text' field must be a string", extra=g.extra_fields)
+            logger.error("The 'text' field must be a string", extra=g.extra_fields)
             return {"error": "The 'text' field must be a string"}, 400
 
-        app.logger.debug("Start text anonymize", extra=g.extra_fields)
+        logger.debug("Start text anonymize", extra=g.extra_fields)
         anonymized_text_output = anonymize_text_with_presidio(input_text)
-        app.logger.debug("End text anonymize", extra=g.extra_fields)
+        logger.debug("End text anonymize", extra=g.extra_fields)
 
         return {"text": anonymized_text_output}, 200
 
     except Exception as e:
-        app.logger.exception("Error in /anonymize endpoint", extra={
+        logger.exception("Error in /anonymize endpoint", extra={
             **g.extra_fields,
             ERROR_MESSAGE: str(e),
             ERROR_TYPE: type(e).__name__,
