@@ -5,4 +5,5 @@ presidio_anonymizer==2.2.358
 configparser==7.2.0
 gunicorn==23.0.0
 flask-openapi3[swagger]==4.1.0
-python-json-logger
+python-json-logger>= 2.0.6
+pydantic~=2.11.7
