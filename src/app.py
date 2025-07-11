@@ -15,57 +15,12 @@ from pythonjsonlogger.json import JsonFormatter
 from functools import wraps
 
 
-# Define logger
-class ECSContextFilter(logging.Filter):
-    def __init__(self):
-        super().__init__()
-        try:
-            config = ConfigParser()
-            config.read('setup.cfg')
-            self.ecs_fields = {
-                "service.name": config.get("metadata", "name"),
-                "service.version": config.get("metadata", "version"),
-                "service.environment": os.getenv("ENV", "not specified"),
-            }
-        except Exception as e:
-            logging.getLogger().exception("Error building logger properties", extra={
-                ERROR_MESSAGE: str(e),
-                ERROR_TYPE: type(e).__name__,
-                ERROR_STACK_TRACE: traceback.format_exc()
-            })
 
-    def filter(self, record):
-        for key, value in self.ecs_fields.items():
-            setattr(record, key, value)
-        return True
 
 
 ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
 ERROR_STACK_TRACE = "error.stack_trace"
-logger = logging.getLogger(__name__)
-
-handler = logging.StreamHandler()
-formatter = JsonFormatter(
-    '%(asctime)s %(levelname)s %(name)s %(message)s '
-    '%(service.name)s %(service.version)s %(service.environment)s '
-    '%(error.type)s %(error.message)s %(error.stack_trace)s '
-    '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
-    '%(responseTime)s %(status)s %(httpCode)s %(response)s',
-    rename_fields={
-        "asctime": "@timestamp",
-        "levelname": "log.level",
-        "name": "log.logger",
-    }
-)
-
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.addFilter(ECSContextFilter())
-
-log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
-log_level = getattr(logging, log_level_str, logging.INFO)
-logger.setLevel(log_level)
 
 # OpenAPI metadata
 info = Info(title="Anonymizer API", version="1.0.0")
@@ -116,6 +71,59 @@ app = OpenAPI(
     validation_error_callback=validation_error_callback)
 
 
+# Define logger
+class ECSContextFilter(logging.Filter):
+    def __init__(self):
+        super().__init__()
+        try:
+            config = ConfigParser()
+            config.read('setup.cfg')
+            self.ecs_fields = {
+                "service.name": config.get("metadata", "name"),
+                "service.version": config.get("metadata", "version"),
+                "service.environment": os.getenv("ENV", "not specified"),
+            }
+        except Exception as e:
+            app.logger.exception("Error building logger properties", extra={
+                ERROR_MESSAGE: str(e),
+                ERROR_TYPE: type(e).__name__,
+                ERROR_STACK_TRACE: traceback.format_exc()
+            })
+
+    def filter(self, record):
+        for key, value in self.ecs_fields.items():
+            setattr(record, key, value)
+        return True
+
+
+formatter = JsonFormatter(
+    '%(asctime)s %(levelname)s %(name)s %(message)s '
+    '%(service.name)s %(service.version)s %(service.environment)s '
+    '%(error.type)s %(error.message)s %(error.stack_trace)s '
+    '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
+    '%(responseTime)s %(status)s %(httpCode)s %(response)s',
+    rename_fields={
+        "asctime": "@timestamp",
+        "levelname": "log.level",
+        "name": "log.logger",
+    }
+)
+log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_str, logging.INFO)
+
+if __name__ != '__main__':
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    gunicorn_logger.setLevel(log_level)
+    app.logger.setLevel(gunicorn_logger.level)
+else:
+    app.logger.setLevel(log_level)
+
+for handler in app.logger.handlers:
+    handler.setFormatter(formatter)
+    handler.addFilter(ECSContextFilter())
+
+
 def ecs_logger(method_name: str):
     def decorator(func):
         @wraps(func)
@@ -134,7 +142,7 @@ def ecs_logger(method_name: str):
             }
 
             try:
-                logger.info(f"Invoking API operation {method_name}", extra=g.extra_fields)
+                app.logger.info(f"Invoking API operation {method_name}", extra=g.extra_fields)
 
                 # Execute the function
                 result = func(*args, **kwargs)
@@ -148,7 +156,7 @@ def ecs_logger(method_name: str):
 
                 if status_code == 200:
                     # Log success
-                    logger.info(f"Successful API operation {method_name}", extra={
+                    app.logger.info(f"Successful API operation {method_name}", extra={
                         **g.extra_fields,
                         "responseTime": response_time,
                         "status": "OK",
@@ -159,7 +167,7 @@ def ecs_logger(method_name: str):
                     body = result.get_data(as_text=True)
                     json_data = json.loads(body)
                     error = json_data.get("error")
-                    logger.exception(f"Failed API operation {method_name}", extra={
+                    app.logger.exception(f"Failed API operation {method_name}", extra={
                         **g.extra_fields,
                         "status": "KO",
                         "httpCode": status_code,
@@ -170,7 +178,7 @@ def ecs_logger(method_name: str):
                 return result
 
             except Exception as e:
-                logger.exception(f"Failed API operation {method_name}", extra={
+                app.logger.exception(f"Failed API operation {method_name}", extra={
                     **g.extra_fields,
                     "status": "KO",
                     "httpCode": 500,
@@ -208,7 +216,7 @@ def info():
         return {"name": app_name, "version": app_version, "environment": os.getenv("ENV", "not specified")}, 200
 
     except Exception as e:
-        logger.exception("Error in /info endpoint", extra={
+        app.logger.exception("Error in /info endpoint", extra={
             **g.extra_fields,
             ERROR_MESSAGE: str(e),
             ERROR_TYPE: type(e).__name__,
@@ -238,17 +246,17 @@ def anonymize_endpoint(body: AnonymizeRequest):
         input_text = body.text
 
         if not isinstance(input_text, str):
-            logger.error("The 'text' field must be a string", extra=g.extra_fields)
+            app.logger.error("The 'text' field must be a string", extra=g.extra_fields)
             return {"error": "The 'text' field must be a string"}, 400
 
-        logger.debug("Start text anonymize", extra=g.extra_fields)
+        app.logger.debug("Start text anonymize", extra=g.extra_fields)
         anonymized_text_output = anonymize_text_with_presidio(input_text)
-        logger.debug("End text anonymize", extra=g.extra_fields)
+        app.logger.debug("End text anonymize", extra=g.extra_fields)
 
         return {"text": anonymized_text_output}, 200
 
     except Exception as e:
-        logger.exception("Error in /anonymize endpoint", extra={
+        app.logger.exception("Error in /anonymize endpoint", extra={
             **g.extra_fields,
             ERROR_MESSAGE: str(e),
             ERROR_TYPE: type(e).__name__,
