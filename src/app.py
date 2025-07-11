@@ -116,12 +116,11 @@ if __name__ != '__main__':
     app.logger.handlers = gunicorn_logger.handlers
     gunicorn_logger.setLevel(log_level)
     app.logger.setLevel(gunicorn_logger.level)
+    for handler in app.logger.handlers:
+        handler.setFormatter(formatter)
+        handler.addFilter(ECSContextFilter())
 else:
     app.logger.setLevel(log_level)
-
-for handler in app.logger.handlers:
-    handler.setFormatter(formatter)
-    handler.addFilter(ECSContextFilter())
 
 
 def ecs_logger(method_name: str):
