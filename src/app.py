@@ -13,6 +13,7 @@ from configparser import ConfigParser
 from src.anonymizer_logic import anonymize_text_with_presidio
 from pythonjsonlogger.json import JsonFormatter
 from functools import wraps
+from http import HTTPStatus
 
 
 # Define logger
@@ -145,14 +146,31 @@ def ecs_logger(method_name: str):
                 end_time_ms = int(time.time() * 1000)
                 response_time = end_time_ms - start_time_ms
 
-                # Log success
-                app.logger.info(f"Successful API operation {method_name}", extra={
-                    **g.extra_fields,
-                    "responseTime": response_time,
-                    "status": "OK",
-                    "httpCode": 200,
-                    "response": json.dumps(result if isinstance(result, dict) else {"result": result})
-                })
+                if isinstance(result, FlaskResponse):
+                    status_code = result.status_code
+                else:
+                    status_code = 200
+
+                if status_code == 200:
+                    # Log success
+                    app.logger.info(f"Successful API operation {method_name}", extra={
+                        **g.extra_fields,
+                        "responseTime": response_time,
+                        "status": "OK",
+                        "httpCode": 200,
+                        "response": json.dumps(result if isinstance(result, dict) else {"result": result})
+                    })
+                else:
+                    body = result.get_data(as_text=True)
+                    json_data = json.loads(body)
+                    error = json_data.get("error")
+                    app.logger.exception(f"Failed API operation {method_name}", extra={
+                        **g.extra_fields,
+                        "status": "KO",
+                        "httpCode": status_code,
+                        "faultCode": HTTPStatus(status_code).name,
+                        "faultDetail": error
+                    })
 
                 return result
 
