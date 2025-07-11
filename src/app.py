@@ -122,6 +122,9 @@ if __name__ != '__main__':
 else:
     app.logger.setLevel(log_level)
 
+for h in app.logger.handlers:
+    print(f"Handler: {type(h)} formatter: {h.formatter}")
+
 
 def ecs_logger(method_name: str):
     def decorator(func):
