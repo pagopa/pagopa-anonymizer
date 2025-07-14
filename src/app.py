@@ -16,8 +16,6 @@ from logging.config import dictConfig
 from functools import wraps
 from pythonjsonlogger.json import JsonFormatter
 
-logging_tree.printout()
-
 
 ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
@@ -84,6 +82,16 @@ dictConfig({
         },
     },
     'loggers': {
+        'gunicorn.access': {
+            'handlers': ['console'],
+            'level': log_level_str,
+            'propagate': False,
+        },
+        'gunicorn.http': {
+            'handlers': ['console'],
+            'level': log_level_str,
+            'propagate': False,
+        },
         'gunicorn.error': {
             'handlers': ['console'],
             'level': log_level_str,
