@@ -14,4 +14,4 @@ EXPOSE 3000
 
 #CMD ["python", "-u", "-m", "src.app"]
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "--access-logfile", "-", "--error-logfile", "-", "src.app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "src.app:app"]
