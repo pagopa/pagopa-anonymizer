@@ -101,7 +101,7 @@ dictConfig({
     }
 })
 
-
+logging_tree.printout()
 app = Flask(__name__)
 
 
