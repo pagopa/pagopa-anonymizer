@@ -97,7 +97,7 @@ dictConfig({
     },
     'root': {
         'level': log_level_str,
-        'handlers': ['gunicorn']
+        'handlers': ['console']
     }
 })
 
