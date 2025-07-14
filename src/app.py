@@ -4,6 +4,7 @@ import traceback
 import json
 import time
 import uuid
+import logging_tree
 from http import HTTPStatus
 from flask import current_app, make_response, g, Flask
 from flask_openapi3 import OpenAPI, Info, Tag
@@ -14,6 +15,8 @@ from src.anonymizer_logic import anonymize_text_with_presidio
 from logging.config import dictConfig
 from functools import wraps
 from pythonjsonlogger.json import JsonFormatter
+
+logging_tree.printout()
 
 
 ERROR_MESSAGE = "error.message"
@@ -73,12 +76,24 @@ dictConfig({
         },
     },
     'handlers': {
-        'gunicorn': {
+        'console': {
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
             'formatter': 'json',
             'filters': ['ecs_context_filter'],
         },
+    },
+    'loggers': {
+        'gunicorn.error': {
+            'handlers': ['console'],
+            'level': log_level_str,
+            'propagate': False,
+        },
+        'flask.app': {
+            'handlers': ['console'],
+            'level': log_level_str,
+            'propagate': False,
+        }
     },
     'root': {
         'level': log_level_str,
