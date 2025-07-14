@@ -4,9 +4,8 @@ import traceback
 import json
 import time
 import uuid
-import logging_tree
 from http import HTTPStatus
-from flask import current_app, make_response, g, Flask
+from flask import current_app, make_response, g
 from flask_openapi3 import OpenAPI, Info, Tag
 from pydantic import BaseModel, Field, ValidationError
 from flask.wrappers import Response as FlaskResponse
@@ -16,13 +15,12 @@ from logging.config import dictConfig
 from functools import wraps
 from pythonjsonlogger.json import JsonFormatter
 
-
 ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
 ERROR_STACK_TRACE = "error.stack_trace"
 
 
-# Define logger
+# Define logger filter
 class ECSContextFilter(logging.Filter):
     def __init__(self):
         super().__init__()
@@ -82,17 +80,7 @@ dictConfig({
         },
     },
     'loggers': {
-        'gunicorn.access': {
-            'handlers': ['console'],
-            'level': log_level_str,
-            'propagate': False,
-        },
-        'gunicorn.http': {
-            'handlers': ['console'],
-            'level': log_level_str,
-            'propagate': False,
-        },
-        'gunicorn.error': {
+        'gunicorn': {
             'handlers': ['console'],
             'level': log_level_str,
             'propagate': False,
@@ -108,9 +96,6 @@ dictConfig({
         'handlers': ['console']
     }
 })
-
-logging_tree.printout()
-app = Flask(__name__)
 
 
 class AnonymizeRequest(BaseModel):
@@ -152,8 +137,8 @@ api_key = {
 security_schemes = {"api_key": api_key}
 security = [{"api_key": []}]
 
-api = OpenAPI(
-    app,
+app = OpenAPI(
+    __name__,
     info=info,
     security_schemes=security_schemes,
     validation_error_status=HTTPStatus.BAD_REQUEST,
@@ -161,37 +146,9 @@ api = OpenAPI(
     validation_error_callback=validation_error_callback
 )
 
-# formatter = JsonFormatter(
-#     '%(asctime)s %(levelname)s %(name)s %(message)s '
-#     '%(service.name)s %(service.version)s %(service.environment)s '
-#     '%(error.type)s %(error.message)s %(error.stack_trace)s '
-#     '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
-#     '%(responseTime)s %(status)s %(httpCode)s %(response)s',
-#     rename_fields={
-#         "asctime": "@timestamp",
-#         "levelname": "log.level",
-#         "name": "log.logger",
-#     }
-# )
-# log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
-# log_level = getattr(logging, log_level_str, logging.INFO)
-#
-# if __name__ != '__main__':
-#     gunicorn_logger = logging.getLogger('gunicorn.error')
-#     app.logger.handlers = gunicorn_logger.handlers
-#     gunicorn_logger.setLevel(log_level)
-#     app.logger.setLevel(gunicorn_logger.level)
-#     for handler in app.logger.handlers:
-#         handler.setFormatter(formatter)
-#         handler.addFilter(ECSContextFilter())
-# else:
-#     app.logger.setLevel(log_level)
-#
-# for h in app.logger.handlers:
-#     print(f"Handler: {type(h)} formatter: {h.formatter}")
 
-
-def ecs_logger(method_name: str):
+# Wrap API method to log execution metadata
+def execution_logging_decorator(method_name: str):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -205,36 +162,30 @@ def ecs_logger(method_name: str):
                 "startTime": start_time_ms,
                 "requestId": request_id,
                 "operationId": operation_id,
-                "args": "",
             }
 
             try:
-                app.logger.info(f"Invoking API operation {method_name}", extra=g.extra_fields)
+                app.logger.info("Invoking API operation %s", method_name, extra=g.extra_fields)
 
                 # Execute the function
-                result = func(*args, **kwargs)
+                response = func(*args, **kwargs)
                 end_time_ms = int(time.time() * 1000)
                 response_time = end_time_ms - start_time_ms
 
-                if isinstance(result, FlaskResponse):
-                    status_code = result.status_code
-                else:
-                    status_code = 200
+                body, status_code = response
 
                 if status_code == 200:
                     # Log success
-                    app.logger.info(f"Successful API operation {method_name}", extra={
+                    app.logger.info("Successful API operation %s", method_name, extra={
                         **g.extra_fields,
                         "responseTime": response_time,
                         "status": "OK",
                         "httpCode": 200,
-                        "response": json.dumps(result if isinstance(result, dict) else {"result": result})
+                        "response": json.dumps(body)
                     })
                 else:
-                    body = result.get_data(as_text=True)
-                    json_data = json.loads(body)
-                    error = json_data.get("error")
-                    app.logger.exception(f"Failed API operation {method_name}", extra={
+                    error = body.get("error")
+                    app.logger.info("Failed API operation %s", method_name, extra={
                         **g.extra_fields,
                         "status": "KO",
                         "httpCode": status_code,
@@ -242,10 +193,10 @@ def ecs_logger(method_name: str):
                         "faultDetail": error
                     })
 
-                return result
+                return response
 
             except Exception as e:
-                app.logger.exception(f"Failed API operation {method_name}", extra={
+                app.logger.exception("Failed API operation %s", method_name, extra={
                     **g.extra_fields,
                     "status": "KO",
                     "httpCode": 500,
@@ -270,7 +221,7 @@ def ecs_logger(method_name: str):
     description="Liveness & readiness endpoint. Returns application name, version, and environment.",
     security=security
 )
-@ecs_logger("info")
+@execution_logging_decorator("info")
 def info():
     """
     GET endpoint for liveness & readiness
@@ -304,7 +255,7 @@ def info():
     description="Anonymizes the provided text using Presidio.",
     security=security
 )
-@ecs_logger("anonymize_endpoint")
+@execution_logging_decorator("anonymize_endpoint")
 def anonymize_endpoint(body: AnonymizeRequest):
     """
     POST endpoint to anonymize the provided text.
