@@ -5,35 +5,89 @@ import json
 import time
 import uuid
 from http import HTTPStatus
-from flask import current_app, make_response, g
+from flask import current_app, make_response, g, Flask
 from flask_openapi3 import OpenAPI, Info, Tag
 from pydantic import BaseModel, Field, ValidationError
 from flask.wrappers import Response as FlaskResponse
 from configparser import ConfigParser
 from src.anonymizer_logic import anonymize_text_with_presidio
-from pythonjsonlogger.json import JsonFormatter
+from logging.config import dictConfig
 from functools import wraps
-
-
-
+from pythonjsonlogger.json import JsonFormatter
 
 
 ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
 ERROR_STACK_TRACE = "error.stack_trace"
 
-# OpenAPI metadata
-info = Info(title="Anonymizer API", version="1.0.0")
-info_tag = Tag(name="Info", description="Liveness & readiness endpoints")
-anonymize_tag = Tag(name="Anonymize", description="Text anonymization endpoints")
 
-api_key = {
-    "type": "apiKey",
-    "name": "api_key",
-    "in": "header"
-}
-security_schemes = {"api_key": api_key}
-security = [{"api_key": []}]
+# Define logger
+class ECSContextFilter(logging.Filter):
+    def __init__(self):
+        super().__init__()
+        try:
+            config = ConfigParser()
+            config.read('setup.cfg')
+            self.ecs_fields = {
+                "service.name": config.get("metadata", "name"),
+                "service.version": config.get("metadata", "version"),
+                "service.environment": os.getenv("ENV", "not specified"),
+            }
+        except Exception as e:
+            app.logger.exception("Error building logger properties", extra={
+                ERROR_MESSAGE: str(e),
+                ERROR_TYPE: type(e).__name__,
+                ERROR_STACK_TRACE: traceback.format_exc()
+            })
+
+    def filter(self, record):
+        for key, value in self.ecs_fields.items():
+            setattr(record, key, value)
+        return True
+
+
+# Configure logging
+log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_str, logging.INFO)
+
+dictConfig({
+    'version': 1,
+    'formatters': {
+        'json': {
+            '()': JsonFormatter,
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s '
+                      '%(service.name)s %(service.version)s %(service.environment)s '
+                      '%(error.type)s %(error.message)s %(error.stack_trace)s '
+                      '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
+                      '%(responseTime)s %(status)s %(httpCode)s %(response)s',
+            'rename_fields': {
+                "asctime": "@timestamp",
+                "levelname": "log.level",
+                "name": "log.logger",
+            }
+        },
+    },
+    'filters': {
+        'ecs_context_filter': {
+            '()': ECSContextFilter,
+        },
+    },
+    'handlers': {
+        'gunicorn': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'json',
+            'filters': ['ecs_context_filter'],
+        },
+    },
+    'root': {
+        'level': log_level_str,
+        'handlers': ['gunicorn']
+    }
+})
+
+
+app = Flask(__name__)
 
 
 class AnonymizeRequest(BaseModel):
@@ -62,68 +116,56 @@ def validation_error_callback(e: ValidationError) -> FlaskResponse:
     return response
 
 
-app = OpenAPI(
-    __name__,
+# OpenAPI metadata
+info = Info(title="Anonymizer API", version="1.0.0")
+info_tag = Tag(name="Info", description="Liveness & readiness endpoints")
+anonymize_tag = Tag(name="Anonymize", description="Text anonymization endpoints")
+
+api_key = {
+    "type": "apiKey",
+    "name": "api_key",
+    "in": "header"
+}
+security_schemes = {"api_key": api_key}
+security = [{"api_key": []}]
+
+api = OpenAPI(
+    app,
     info=info,
     security_schemes=security_schemes,
     validation_error_status=HTTPStatus.BAD_REQUEST,
     validation_error_model=ErrorResponse,
-    validation_error_callback=validation_error_callback)
-
-
-# Define logger
-class ECSContextFilter(logging.Filter):
-    def __init__(self):
-        super().__init__()
-        try:
-            config = ConfigParser()
-            config.read('setup.cfg')
-            self.ecs_fields = {
-                "service.name": config.get("metadata", "name"),
-                "service.version": config.get("metadata", "version"),
-                "service.environment": os.getenv("ENV", "not specified"),
-            }
-        except Exception as e:
-            app.logger.exception("Error building logger properties", extra={
-                ERROR_MESSAGE: str(e),
-                ERROR_TYPE: type(e).__name__,
-                ERROR_STACK_TRACE: traceback.format_exc()
-            })
-
-    def filter(self, record):
-        for key, value in self.ecs_fields.items():
-            setattr(record, key, value)
-        return True
-
-
-formatter = JsonFormatter(
-    '%(asctime)s %(levelname)s %(name)s %(message)s '
-    '%(service.name)s %(service.version)s %(service.environment)s '
-    '%(error.type)s %(error.message)s %(error.stack_trace)s '
-    '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
-    '%(responseTime)s %(status)s %(httpCode)s %(response)s',
-    rename_fields={
-        "asctime": "@timestamp",
-        "levelname": "log.level",
-        "name": "log.logger",
-    }
+    validation_error_callback=validation_error_callback
 )
-log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
-log_level = getattr(logging, log_level_str, logging.INFO)
 
-if __name__ != '__main__':
-    gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    gunicorn_logger.setLevel(log_level)
-    app.logger.setLevel(gunicorn_logger.level)
-    for handler in app.logger.handlers:
-        handler.setFormatter(formatter)
-        handler.addFilter(ECSContextFilter())
-else:
-    app.logger.setLevel(log_level)
-
-for h in app.logger.handlers:
-    print(f"Handler: {type(h)} formatter: {h.formatter}")
+# formatter = JsonFormatter(
+#     '%(asctime)s %(levelname)s %(name)s %(message)s '
+#     '%(service.name)s %(service.version)s %(service.environment)s '
+#     '%(error.type)s %(error.message)s %(error.stack_trace)s '
+#     '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
+#     '%(responseTime)s %(status)s %(httpCode)s %(response)s',
+#     rename_fields={
+#         "asctime": "@timestamp",
+#         "levelname": "log.level",
+#         "name": "log.logger",
+#     }
+# )
+# log_level_str = os.getenv("APP_LOGGING_LEVEL", "INFO").upper()
+# log_level = getattr(logging, log_level_str, logging.INFO)
+#
+# if __name__ != '__main__':
+#     gunicorn_logger = logging.getLogger('gunicorn.error')
+#     app.logger.handlers = gunicorn_logger.handlers
+#     gunicorn_logger.setLevel(log_level)
+#     app.logger.setLevel(gunicorn_logger.level)
+#     for handler in app.logger.handlers:
+#         handler.setFormatter(formatter)
+#         handler.addFilter(ECSContextFilter())
+# else:
+#     app.logger.setLevel(log_level)
+#
+# for h in app.logger.handlers:
+#     print(f"Handler: {type(h)} formatter: {h.formatter}")
 
 
 def ecs_logger(method_name: str):
