@@ -66,7 +66,6 @@ def on_starting(server):
             'console': {
                 'class': 'logging.StreamHandler',
                 'stream': 'ext://sys.stdout',
-                'formatter': 'json',
                 'filters': ['ecs_context_filter'],
             },
         },
