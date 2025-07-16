@@ -10,7 +10,7 @@ class TestECSContextFilter(unittest.TestCase):
     @patch('src.logging_setup.ConfigParser')
     @patch.dict(os.environ, {"ENV": "test-environment"})
     def test_filter_sets_ecs_fields(self, mock_config_parser):
-        # Simula il contenuto del setup.cfg
+        # mock setup.cfg
         mock_config = MagicMock()
         mock_config.get.side_effect = lambda section, key: f"{key}-value"
         mock_config_parser.return_value = mock_config

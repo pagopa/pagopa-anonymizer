@@ -5,7 +5,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 import unittest
-from src.app import app 
+from src.app import app
+
 
 class GenerateOpenapi(unittest.TestCase):
     def test_generate_openapi(self):
@@ -14,6 +15,7 @@ class GenerateOpenapi(unittest.TestCase):
         with open("infra/api/v1/openapi.json", "w") as f:
             json.dump(openapi_dict, f, indent=2)
         print("openapi.json generated successfully.")
+
 
 if __name__ == '__main__':
     unittest.main()
