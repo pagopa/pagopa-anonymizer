@@ -9,7 +9,6 @@ ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
 ERROR_STACK_TRACE = "error.stack_trace"
 
-
 # Define logger filter
 class ECSContextFilter(logging.Filter):
     def __init__(self):
@@ -34,6 +33,11 @@ class ECSContextFilter(logging.Filter):
             setattr(record, key, value)
         return True
 
+# Define a JsonFormatter that filter out null fields
+class NonNullJsonFormatter(JsonFormatter):
+    def process_log_record(self, log_record):
+        return {k: v for k, v in log_record.items() if v is not None}
+
 
 # Configure logging
 def on_starting(server):
@@ -43,7 +47,7 @@ def on_starting(server):
         'version': 1,
         'formatters': {
             'json': {
-                '()': JsonFormatter,
+                '()': NonNullJsonFormatter,
                 'format': '%(asctime)s %(levelname)s %(name)s %(message)s '
                           '%(service.name)s %(service.version)s %(service.environment)s '
                           '%(error.type)s %(error.message)s %(error.stack_trace)s '
@@ -66,6 +70,7 @@ def on_starting(server):
             'console': {
                 'class': 'logging.StreamHandler',
                 'stream': 'ext://sys.stdout',
+                'formatter': 'json',
                 'filters': ['ecs_context_filter'],
             },
         },
@@ -87,4 +92,4 @@ def on_starting(server):
         }
     })
     logger = logging.getLogger(__name__)
-    logger.info("🔥 Logging configurato allo startup di Gunicorn")
+    logger.info("🔥 Logging configured on Gunicorn startup")
