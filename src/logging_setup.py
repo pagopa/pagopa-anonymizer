@@ -10,6 +10,7 @@ ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
 ERROR_STACK_TRACE = "error.stack_trace"
 
+
 # Define logger filter
 class ECSContextFilter(logging.Filter):
     def __init__(self):
@@ -33,6 +34,7 @@ class ECSContextFilter(logging.Filter):
         for key, value in self.ecs_fields.items():
             setattr(record, key, value)
         return True
+
 
 # Define a JsonFormatter that filter out null fields
 class NonNullJsonFormatter(JsonFormatter):
