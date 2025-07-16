@@ -47,12 +47,13 @@ def on_starting(server):
                 'format': '%(asctime)s %(levelname)s %(name)s %(message)s '
                           '%(service.name)s %(service.version)s %(service.environment)s '
                           '%(error.type)s %(error.message)s %(error.stack_trace)s '
-                          '%(method)s %(startTime)s %(requestId)s %(operationId)s %(args)s '
+                          '%(method)s %(startTime)s %(requestId)s %(operationId)s %(_request_args)s '
                           '%(responseTime)s %(status)s %(httpCode)s %(response)s',
                 'rename_fields': {
                     "asctime": "@timestamp",
                     "levelname": "log.level",
                     "name": "log.logger",
+                    "_request_args": "args",
                 }
             },
         },

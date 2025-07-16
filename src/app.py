@@ -66,11 +66,33 @@ app = OpenAPI(
 )
 
 
+def serialize_kwargs(kwargs):
+    serialized = {}
+    for k, v in kwargs.items():
+        if hasattr(v, 'model_dump'):
+            serialized[k] = v.model_dump()
+        elif hasattr(v, 'dict'):
+            serialized[k] = v.dict()
+        else:
+            serialized[k] = v
+    return json.dumps(serialized)
+
+
 # Wrap API method to log execution metadata
 def execution_logging_decorator(method_name: str):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """
+            Executes the decorated function while capturing and logging execution metadata.
+
+            Args:
+                *args: Wrapped function's positional arguments (e.g., values).
+                **kwargs: Wrapped function's named arguments (e.g., key=value).
+
+            Returns:
+                The result of the original function, typically a (body, status_code) tuple.
+            """
             start_time_ms = int(time.time() * 1000)
             request_id = str(uuid.uuid4())
             operation_id = str(uuid.uuid4())
@@ -81,12 +103,13 @@ def execution_logging_decorator(method_name: str):
                 "startTime": start_time_ms,
                 "requestId": request_id,
                 "operationId": operation_id,
+                "_request_args": "{}" if not kwargs else serialize_kwargs(kwargs)
             }
 
             try:
-                app.logger.info("Invoking API operation %s", method_name, extra=g.extra_fields)
+                app.logger.info("Invoking API operation " + method_name, extra=g.extra_fields)
 
-                # Execute the function
+                # Execute the wrapped function
                 response = func(*args, **kwargs)
                 end_time_ms = int(time.time() * 1000)
                 response_time = end_time_ms - start_time_ms
@@ -94,13 +117,12 @@ def execution_logging_decorator(method_name: str):
                 body, status_code = response
 
                 if status_code == 200:
-                    # Log success
                     app.logger.info("Successful API operation %s", method_name, extra={
                         **g.extra_fields,
                         "responseTime": response_time,
                         "status": "OK",
                         "httpCode": 200,
-                        "response": json.dumps(body)
+                        "response": "{}" if not body else json.dumps(body)
                     })
                 else:
                     error = body.get("error")
