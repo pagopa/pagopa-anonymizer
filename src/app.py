@@ -103,7 +103,9 @@ def execution_logging_decorator(method_name: str):
                 "startTime": start_time_ms,
                 "requestId": request_id,
                 "operationId": operation_id,
-                "_request_args": "{}" if not kwargs else serialize_kwargs(kwargs)
+                "_request_args": "{}"
+                # Set _request_args to {} to prevent logging sensitive personal data (PII)
+                # "_request_args": "{}" if not kwargs else serialize_kwargs(kwargs)
             }
 
             try:
