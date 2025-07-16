@@ -15,6 +15,7 @@ ERROR_STACK_TRACE = "error.stack_trace"
 class ECSContextFilter(logging.Filter):
     def __init__(self):
         super().__init__()
+        self.ecs_fields = {}
         try:
             config = ConfigParser()
             config.read('setup.cfg')
