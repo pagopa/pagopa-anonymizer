@@ -133,12 +133,6 @@ jobs:
           semver: ${{ needs.setup.outputs.semver }}
           current_version: ${{ steps.get_version.outputs.version }}
 
-      - name: Log Bump Version Output
-        run: |
-          echo "DEBUG: Bump Version Output"
-          echo "  new_version: ${{ steps.bump_version.outputs.new_version }}"
-          echo "  old_version: ${{ steps.get_version.outputs.version }}"
-
       - name: Update Version
         shell: bash
         run: |
