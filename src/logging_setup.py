@@ -4,6 +4,7 @@ import traceback
 from logging.config import dictConfig
 from pythonjsonlogger.json import JsonFormatter
 from configparser import ConfigParser
+from datetime import datetime, timezone
 
 ERROR_MESSAGE = "error.message"
 ERROR_TYPE = "error.type"
@@ -36,6 +37,10 @@ class ECSContextFilter(logging.Filter):
 # Define a JsonFormatter that filter out null fields
 class NonNullJsonFormatter(JsonFormatter):
     def process_log_record(self, log_record):
+        # Format timestamp in ISO 8601
+        log_record['@timestamp'] = datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+
+        # Filter null fields
         return {k: v for k, v in log_record.items() if v is not None}
 
 
