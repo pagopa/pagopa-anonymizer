@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-anonymizer"
   image:
     repository: ghcr.io/pagopa/pagopa-anonymizer
-    tag: "0.2.2-24-3112-PAGOPA-3137-setup-logging-kibana"
+    tag: "0.2.2--6224-PAGOPA-3137-setup-logging-kibana"
     pullPolicy: Always
   livenessProbe:
     httpGet:
