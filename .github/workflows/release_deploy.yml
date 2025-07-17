@@ -139,7 +139,7 @@ jobs:
             var versions = CURRENT_VERSION.replace('v','').split('.');
             
             if (${{ github.ref_name != 'main' }}) {
-              var branch = ${{github.ref_name}}
+              var branch = "${{github.ref_name}}"
             }
             
             var v0 = versions[0] ?? '0';
