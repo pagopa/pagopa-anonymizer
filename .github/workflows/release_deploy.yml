@@ -194,7 +194,7 @@ jobs:
         run: |
           echo "📑 Bump Openapi Version to ${{ steps.bump_version.outputs.new_version }}"
 
-          for i in infra/api/v1/openapi/*.json; do
+          for i in infra/api/v1/*.json; do
             [ -f "$i" ] || break
             cat <<< "$(jq ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i")" > "$i"
             git add $i
