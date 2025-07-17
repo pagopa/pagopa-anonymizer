@@ -5,7 +5,7 @@ import time
 import uuid
 from http import HTTPStatus
 from flask import current_app, make_response, g
-from flask_openapi3 import OpenAPI, Info, Tag
+from flask_openapi3 import OpenAPI, Info, Tag, Server, ServerVariable
 from pydantic import BaseModel, Field, ValidationError
 from flask.wrappers import Response as FlaskResponse
 from configparser import ConfigParser
@@ -56,9 +56,28 @@ api_key = {
 security_schemes = {"api_key": api_key}
 security = [{"api_key": []}]
 
+servers = [
+    Server(url="http://localhost:8080"),
+    Server(url="https://{host}{basePath}", variables={
+        "basePath": ServerVariable(
+            default="/anonymizer/v1",
+            enum=[
+                "anonymizer/v1"
+            ]),
+        "host": ServerVariable(
+            default="https://api.platform.pagopa.it",
+            enum=[
+                "https://api.dev.platform.pagopa.it",
+                "https://api.uat.platform.pagopa.it",
+                "https://api.platform.pagopa.it"
+            ])
+    })
+]
+
 app = OpenAPI(
     __name__,
     info=info,
+    servers=servers,
     security_schemes=security_schemes,
     validation_error_status=HTTPStatus.BAD_REQUEST,
     validation_error_model=ErrorResponse,

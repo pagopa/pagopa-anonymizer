@@ -1,9 +1,5 @@
-import sys
 import os
-
-## Add the directory containing your package to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-
+import json
 import unittest
 from src.app import app
 
@@ -11,9 +7,17 @@ from src.app import app
 class GenerateOpenapi(unittest.TestCase):
     def test_generate_openapi(self):
         openapi_dict = app.api_doc
-        import json
-        with open("infra/api/v1/openapi.json", "w") as f:
+
+        # Costruisci percorso assoluto rispetto alla directory del file di test
+        output_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'infra', 'api', 'v1', 'openapi.json'))
+
+        # Crea la directory se non esiste
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        # Scrivi il file
+        with open(output_file, "w") as f:
             json.dump(openapi_dict, f, indent=2)
+
         print("openapi.json generated successfully.")
 
 

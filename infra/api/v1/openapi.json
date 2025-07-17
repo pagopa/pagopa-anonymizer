@@ -12,18 +12,18 @@
       "url": "https://{host}{basePath}",
       "variables": {
         "basePath": {
-          "default": "/anonymizer/v1",
           "enum": [
             "anonymizer/v1"
-          ]
+          ],
+          "default": "/anonymizer/v1"
         },
         "host": {
-          "default": "https://api.platform.pagopa.it",
           "enum": [
             "https://api.dev.platform.pagopa.it",
             "https://api.uat.platform.pagopa.it",
             "https://api.platform.pagopa.it"
-          ]
+          ],
+          "default": "https://api.platform.pagopa.it"
         }
       }
     }
