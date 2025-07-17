@@ -134,42 +134,41 @@ jobs:
           BRANCH: ${{ github.ref_name }}
         shell: bash
         run: |
-          var versions = $CURRENT_VERSION.replace('v','').split('.');
+          # Remove first v
+          version="${CURRENT_VERSION#v}"
           
-          if (${{ github.ref_name != 'main' }}) {
-            var branch = '-' + $BRANCH
-          }
+          # Split version for .
+          IFS='.' read -r v0 v1 vaux <<< "$version"
           
-          var v0 = versions[0] ?? '0';
-          var v1 = versions[1] ?? '0';
-          var vaux = (versions[2] ?? '0');
-          var v2 = vaux.split('-')[0] ?? '0';
-          var v3 = vaux.split('-')[1] ?? '0';
+          # Split v0 for .
+          IFS='-' read -r v2 v3 <<< "${vaux:-0}"
           
-          var major = parseInt(v0) || 0;
-          var minor = parseInt(v1) || 0;
-          var patch = parseInt(v2) || 0;
-          var buildNumber = parseInt(v3) || 0;
+          major=${v0:-0}
+          minor=${v1:-0}
+          patch=${v2:-0}
+          buildNumber=${v3:-0}
           
-          var newVersion = "";
+          branch_suffix=""
+          if [ "$BRANCH" != "main" ]; then
+          branch_suffix="-$BRANCH"
+          fi
           
-          if ($SEMVER == 'major'){
-            newVersion = (major + 1) + '.0.0' 
-          }
-          if ($SEMVER == 'minor'){
-            newVersion = major.toString() + '.' + (minor + 1) + '.0' 
-          } 
-          if ($SEMVER == 'patch'){
-            newVersion = major.toString() + '.' + minor.toString() + '.' + (patch + 1)
-          }
-          if ($SEMVER == 'buildNumber'){
-            newVersion = major.toString() + '.' + minor.toString() + '.' + patch.toString() + '-' + (buildNumber + 1) + branch
-          }
-          if ($SEMVER == 'skip'){
-            newVersion = $CURRENT_VERSION
-          }
-          console.log('new version: ' + newVersion);
-          echo "new_version=${newVersion}" >> $GITHUB_OUTPUT
+          newVersion=""
+          if [ "$SEMVER" == "major" ]; then
+          newVersion="$((major + 1)).0.0"
+          elif [ "$SEMVER" == "minor" ]; then
+          newVersion="$major.$((minor + 1)).0"
+          elif [ "$SEMVER" == "patch" ]; then
+          newVersion="$major.$minor.$((patch + 1))"
+          elif [ "$SEMVER" == "buildNumber" ]; then
+          newVersion="$major.$minor.$patch-$((buildNumber + 1))$branch_suffix"
+          elif [ "$SEMVER" == "skip" ]; then
+          newVersion="$CURRENT_VERSION"
+          fi
+        
+          echo "new version: $newVersion"
+          echo "new_version=$newVersion" >> "$GITHUB_OUTPUT"
+
 
       - name: Update Version
         shell: bash
