@@ -131,13 +131,13 @@ jobs:
         env:
           CURRENT_VERSION: ${{ steps.get_version.outputs.version }}
           SEMVER: ${{ needs.setup.outputs.semver }}
+          BRANCH: ${{ github.ref_name }
         shell: bash
         run: |
-          var { CURRENT_VERSION, SEMVER } = process.env
-          var versions = CURRENT_VERSION.replace('v','').split('.');
+          var versions = $CURRENT_VERSION.replace('v','').split('.');
           
           if (${{ github.ref_name != 'main' }}) {
-            var branch = "${{github.ref_name}}"
+            var branch = '-' + $BRANCH
           }
           
           var v0 = versions[0] ?? '0';
@@ -153,20 +153,20 @@ jobs:
           
           var newVersion = "";
           
-          if (SEMVER == 'major'){
+          if ($SEMVER == 'major'){
             newVersion = (major + 1) + '.0.0' 
           }
-          if (SEMVER == 'minor'){
+          if ($SEMVER == 'minor'){
             newVersion = major.toString() + '.' + (minor + 1) + '.0' 
           } 
-          if (SEMVER == 'patch'){
+          if ($SEMVER == 'patch'){
             newVersion = major.toString() + '.' + minor.toString() + '.' + (patch + 1)
           }
-          if (SEMVER == 'buildNumber'){
-            newVersion = major.toString() + '.' + minor.toString() + '.' + patch.toString() + '-' + (buildNumber + 1) + '-' + branch
+          if ($SEMVER == 'buildNumber'){
+            newVersion = major.toString() + '.' + minor.toString() + '.' + patch.toString() + '-' + (buildNumber + 1) + branch
           }
-          if (SEMVER == 'skip'){
-            newVersion = CURRENT_VERSION
+          if ($SEMVER == 'skip'){
+            newVersion = $CURRENT_VERSION
           }
           console.log('new version: ' + newVersion);
           echo "new_version=${newVersion}" >> $GITHUB_OUTPUT
