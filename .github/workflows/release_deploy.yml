@@ -131,7 +131,7 @@ jobs:
         env:
           CURRENT_VERSION: ${{ steps.get_version.outputs.version }}
           SEMVER: ${{ needs.setup.outputs.semver }}
-          BRANCH: ${{ github.ref_name }
+          BRANCH: ${{ github.ref_name }}
         shell: bash
         run: |
           var versions = $CURRENT_VERSION.replace('v','').split('.');
