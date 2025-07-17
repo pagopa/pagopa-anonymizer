@@ -134,14 +134,10 @@ jobs:
           BRANCH: ${{ github.ref_name }}
         shell: bash
         run: |
-          # Remove first v
-          version="${CURRENT_VERSION#v}"
+          version="${CURRENT_VERSION#v}" # Remove first v
           
           # Split version for .
           IFS='.' read -r v0 v1 vaux <<< "$version"
-          
-          echo "vaux $vaux"
-          
           # Split v0 for .
           IFS='-' read -r v2 v3 v4 <<< "${vaux:-0}"
           
@@ -149,10 +145,6 @@ jobs:
           minor=${v1:-0}
           patch=${v2:-0}
           buildNumber=${v3:-0}
-          echo "major $major"
-          echo "minor $minor"
-          echo "patch $patch"
-          echo "buildNumber $buildNumber"
           
           branch_suffix=""
           if [ "$BRANCH" != "main" ]; then
