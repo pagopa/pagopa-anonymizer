@@ -8,10 +8,9 @@ from configparser import ConfigParser
 class GenerateOpenapi(unittest.TestCase):
     def test_generate_openapi(self):
         openapi_dict = app.api_doc
-        print("setup.cfg trovato:", os.path.exists("setup.cfg"))
 
         config = ConfigParser()
-        config.read('../setup.cfg')
+        config.read(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')))
         app_version = config.get("metadata", "version")
 
         if "info" in openapi_dict:
