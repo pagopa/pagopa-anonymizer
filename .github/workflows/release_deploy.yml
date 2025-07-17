@@ -140,19 +140,19 @@ jobs:
           # Split version for .
           IFS='.' read -r v0 v1 vaux <<< "$version"
           
-          echo "vaux vaux"
+          echo "vaux $vaux"
           
           # Split v0 for .
-          IFS='-' read -r v2 v3 <<< "${vaux:-0}"
+          IFS='-' read -r v2 v3 v4 <<< "${vaux:-0}"
           
           major=${v0:-0}
           minor=${v1:-0}
           patch=${v2:-0}
           buildNumber=${v3:-0}
           echo "major $major"
-          echo "minor minor"
-          echo "patch patch"
-          echo "buildNumber buildNumber"
+          echo "minor $minor"
+          echo "patch $patch"
+          echo "buildNumber $buildNumber"
           
           branch_suffix=""
           if [ "$BRANCH" != "main" ]; then

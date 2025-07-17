@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anonymizer API",
-    "version": "0.2.2--6224-PAGOPA-3137-setup-logging-kibana"
+    "version": "0.2.2-24-PAGOPA-3137-setup-logging-kibana"
   },
   "servers": [
     {
