@@ -2,11 +2,22 @@ import os
 import json
 import unittest
 from src.app import app
+from configparser import ConfigParser
 
 
 class GenerateOpenapi(unittest.TestCase):
     def test_generate_openapi(self):
         openapi_dict = app.api_doc
+        print("setup.cfg trovato:", os.path.exists("setup.cfg"))
+
+        config = ConfigParser()
+        config.read('../setup.cfg')
+        app_version = config.get("metadata", "version")
+
+        if "info" in openapi_dict:
+            openapi_dict["info"]["version"] = app_version
+        else:
+            openapi_dict["info"] = {"version": app_version}
 
         # Costruisci percorso assoluto rispetto alla directory del file di test
         output_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'infra', 'api', 'v1', 'openapi.json'))
