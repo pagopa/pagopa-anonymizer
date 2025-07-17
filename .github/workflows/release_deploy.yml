@@ -171,7 +171,7 @@ jobs:
               newVersion = CURRENT_VERSION
             }
             console.log('new version: ' + newVersion);
-            return newVersion;
+            echo "new_version=newVersion" >> $GITHUB_OUTPUT
 
       - name: Update Version
         shell: bash
@@ -184,6 +184,28 @@ jobs:
         with:
           version: ${{ steps.bump_version.outputs.new_version }}
           beta: ${{ inputs.beta }}
+
+      - name: Update Openapi/Swagger Version
+        if: ${{ inputs.semver != 'skip' }}
+        shell: bash
+        run: |
+          echo "📑 Bump Openapi Version to ${{ steps.bump_version.outputs.new_version }}"
+
+          for i in infra/api/v1/openapi/*.json; do
+            [ -f "$i" ] || break
+            cat <<< "$(jq ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i")" > "$i"
+            git add $i
+          done
+          for i in openapi/*.yaml; do
+            [ -f "$i" ] || break
+            yq -i ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i"
+            git add "$i"
+          done
+          for i in openapi/*.yml; do
+            [ -f "$i" ] || break
+            yq -i ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i"
+            git add "$i"
+          done
 
       - name: Push New Version ${{ steps.bump_version.outputs.new_version }}
         shell: bash
