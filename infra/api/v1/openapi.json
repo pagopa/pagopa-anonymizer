@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anonymizer API",
-    "version": "1.0.0"
+    "version": "0.2.2-25-PAGOPA-3137-setup-logging-kibana"
   },
   "servers": [
     {
@@ -12,18 +12,18 @@
       "url": "https://{host}{basePath}",
       "variables": {
         "basePath": {
-          "default": "/anonymizer/v1",
           "enum": [
             "anonymizer/v1"
-          ]
+          ],
+          "default": "/anonymizer/v1"
         },
         "host": {
-          "default": "https://api.platform.pagopa.it",
           "enum": [
             "https://api.dev.platform.pagopa.it",
             "https://api.uat.platform.pagopa.it",
             "https://api.platform.pagopa.it"
-          ]
+          ],
+          "default": "https://api.platform.pagopa.it"
         }
       }
     }

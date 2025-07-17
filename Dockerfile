@@ -14,4 +14,4 @@ EXPOSE 3000
 
 #CMD ["python", "-u", "-m", "src.app"]
 
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "4", "src.app:app"]
+ENTRYPOINT ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "-c", "src/logging_setup.py", "src.app:app"]

@@ -91,14 +91,14 @@ jobs:
         run: echo "semver=${{env.SEMVER}}" >> $GITHUB_OUTPUT
 
       # Set Environment
-      - run: echo "ENVIRNOMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+      - run: echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
 
       - if: ${{ inputs.environment == null }}
-        run: echo "ENVIRNOMENT=dev" >> $GITHUB_ENV
+        run: echo "ENVIRONMENT=dev" >> $GITHUB_ENV
 
       - id: get_env
         name: Set Output
-        run: echo "environment=${{env.ENVIRNOMENT}}" >> $GITHUB_OUTPUT
+        run: echo "environment=${{env.ENVIRONMENT}}" >> $GITHUB_OUTPUT
 
 
   release:
@@ -128,16 +128,45 @@ jobs:
 
       - name: Bump Version
         id: bump_version
-        uses: pagopa/github-actions-template/bump-semver@main
-        with:
-          semver: ${{ needs.setup.outputs.semver }}
-          current_version: ${{ steps.get_version.outputs.version }}
-
-      - name: Log Bump Version Output
+        env:
+          CURRENT_VERSION: ${{ steps.get_version.outputs.version }}
+          SEMVER: ${{ needs.setup.outputs.semver }}
+          BRANCH: ${{ github.ref_name }}
+        shell: bash
         run: |
-          echo "DEBUG: Bump Version Output"
-          echo "  new_version: ${{ steps.bump_version.outputs.new_version }}"
-          echo "  old_version: ${{ steps.get_version.outputs.version }}"
+          version="${CURRENT_VERSION#v}" # Remove first v
+          
+          # Split version for .
+          IFS='.' read -r v0 v1 vaux <<< "$version"
+          # Split v0 for .
+          IFS='-' read -r v2 v3 v4 <<< "${vaux:-0}"
+          
+          major=${v0:-0}
+          minor=${v1:-0}
+          patch=${v2:-0}
+          buildNumber=${v3:-0}
+          
+          branch_suffix=""
+          if [ "$BRANCH" != "main" ]; then
+          branch_suffix="-$BRANCH"
+          fi
+          
+          newVersion=""
+          if [ "$SEMVER" == "major" ]; then
+          newVersion="$((major + 1)).0.0"
+          elif [ "$SEMVER" == "minor" ]; then
+          newVersion="$major.$((minor + 1)).0"
+          elif [ "$SEMVER" == "patch" ]; then
+          newVersion="$major.$minor.$((patch + 1))"
+          elif [ "$SEMVER" == "buildNumber" ]; then
+          newVersion="$major.$minor.$patch-$((buildNumber + 1))$branch_suffix"
+          elif [ "$SEMVER" == "skip" ]; then
+          newVersion="$CURRENT_VERSION"
+          fi
+        
+          echo "new version: $newVersion"
+          echo "new_version=$newVersion" >> "$GITHUB_OUTPUT"
+
 
       - name: Update Version
         shell: bash
@@ -151,6 +180,28 @@ jobs:
           version: ${{ steps.bump_version.outputs.new_version }}
           beta: ${{ inputs.beta }}
 
+      - name: Update Openapi/Swagger Version
+        if: ${{ inputs.semver != 'skip' }}
+        shell: bash
+        run: |
+          echo "📑 Bump Openapi Version to ${{ steps.bump_version.outputs.new_version }}"
+
+          for i in infra/api/v1/*.json; do
+            [ -f "$i" ] || break
+            cat <<< "$(jq ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i")" > "$i"
+            git add $i
+          done
+          for i in openapi/*.yaml; do
+            [ -f "$i" ] || break
+            yq -i ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i"
+            git add "$i"
+          done
+          for i in openapi/*.yml; do
+            [ -f "$i" ] || break
+            yq -i ".info.version = \"${{ steps.bump_version.outputs.new_version }}\"" "$i"
+            git add "$i"
+          done
+
       - name: Push New Version ${{ steps.bump_version.outputs.new_version }}
         shell: bash
         run: |
@@ -159,25 +210,6 @@ jobs:
           git config --global user.name "pagopa-github-bot"
           git commit -m "Bump to version ${{ steps.bump_version.outputs.new_version }}" || exit 0
           git push origin ${{ github.ref_name}}
-
-      - name: DEBUG ncipollo/release-action inputs
-        run: |
-          echo "DEBUG: Inputs for ncipollo/release-action:"
-          echo "  commit (evaluated): ${{ (inputs.version != 'skip_or_promote' && github.ref_name) || '' }}"
-          # Nota: l'espressione originale era (inputs.semver != 'skip' && github.ref_name) || ''
-          # 'inputs.semver' non è un input definito per workflow_dispatch, ma 'inputs.version' sì.
-          # 'skip_or_promote' è un valore di 'inputs.version'.
-          # Se l'intento è usare il semver calcolato nel job 'setup', allora dovrebbe essere needs.setup.outputs.semver
-          # Se l'intento è usare github.sha, si può omettere 'commit' e l'action usa il default (github.sha).
-          echo "  (raw expression for commit used: (inputs.semver != 'skip' && github.ref_name) || '' )"
-          echo "  (workflow input 'version': ${{ inputs.version }})"
-          echo "  (github.ref_name: ${{ github.ref_name }})"
-          echo "  (evaluated needs.setup.outputs.semver: ${{ needs.setup.outputs.semver }})"
-          echo "  tag: ${{ steps.bump_version.outputs.new_version }}"
-          echo "  name: Release ${{ steps.bump_version.outputs.new_version }}"
-          echo "  makeLatest: true"
-          echo "  generateReleaseNotes: true"
-          echo "  GITHUB_TOKEN: (is set, not printing value for security)"
 
       - name: Create Release
         uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e # v1.12.0
@@ -188,6 +220,7 @@ jobs:
           name: Release ${{ steps.bump_version.outputs.new_version }}
           makeLatest: true
           generateReleaseNotes: true
+          commit: ${{ (needs.setup.outputs.semver != 'skip' && github.ref_name) || '' }}
 
   image:
     needs: [ setup, release ]
@@ -195,16 +228,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.setup.outputs.semver != 'skip' }}
     steps:
-      - name: DEBUG pagopa/ghcr-build-push inputs
-        run: |
-          echo "DEBUG: Inputs for pagopa/github-actions-template/ghcr-build-push:"
-          echo "  github_token: (is set, not printing value for security)"
-          echo "  tag: ${{ needs.release.outputs.version }}"
-          # Aggiungiamo altri input che potrebbero essere rilevanti o che l'azione potrebbe aspettarsi con valori di default
-          echo "  image_name: (default, not specified - usually <owner>/<repo>)"
-          echo "  dockerfile: (default, not specified - usually Dockerfile)"
-          echo "  build_context: (default, not specified - usually .)"
-
       - name: Build and Push
         uses: pagopa/github-actions-template/ghcr-build-push@d91a1fd0b913c9830589be5d86cdb71c90813fae # v1.5.4
         with:
