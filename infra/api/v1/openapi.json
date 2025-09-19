@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anonymizer API",
-    "version": "1.0.0"
+    "version": "1.0.0-1-PAGOPA-3216-gh"
   },
   "servers": [
     {
