@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopa-anonymizer
 description: Microservice to anonymize PII
 type: application
-version: 0.38.0
-appVersion: "1.0.0-1-PAGOPA-3216-gh"
+version: 0.39.0
+appVersion: "1.0.1"
 dependencies:
   - name: microservice-chart
     version: 7.5.0
