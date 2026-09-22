@@ -175,7 +175,7 @@ jobs:
           sed -i "/^\[metadata\]/,/^\s*\[/{s/^\(version\s*=\s*\).*/\1${{ steps.bump_version.outputs.new_version }}/}" setup.cfg
 
       - name: Helm Bump
-        uses: pagopa/github-actions-template/helm-bump@main
+        uses: pagopa/github-actions-template/helm-bump@705d571bb13b279776fd20e9eb20232dc25679e4 # main
         with:
           version: ${{ steps.bump_version.outputs.new_version }}
           beta: ${{ inputs.beta }}
