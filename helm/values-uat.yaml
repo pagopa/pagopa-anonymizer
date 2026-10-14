@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-anonymizer"
   image:
     repository: ghcr.io/pagopa/pagopa-anonymizer
-    tag: "1.0.1"
+    tag: "1.0.1-1-update-ingress-haproxy"
     pullPolicy: Always
   livenessProbe:
     httpGet:
