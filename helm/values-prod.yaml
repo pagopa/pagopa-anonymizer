@@ -110,3 +110,8 @@ microservice-chart:
         pullPolicy: Always
       envConfig:
       envSecret:
+  haproxy:
+    create: true
+    host: haproxy.shared.internal.platform.pagopa.it
+    path: /pagopa-anonymizer/
+    rewriteTarget: /\1
