@@ -37,6 +37,8 @@ microservice-chart:
     host: "weudev.shared.internal.dev.platform.pagopa.it"
     path: /pagopa-anonymizer/(.*)
     servicePort: 3000
+    annotations:
+      kubernetes.io/ingress.class: haproxy
   serviceAccount:
     name: "shared-workload-identity"
   azure:
