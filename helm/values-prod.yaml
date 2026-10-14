@@ -69,13 +69,13 @@ microservice-chart:
       - type: cpu
         metadata:
           # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
+          metricType: Utilization
       - type: memory
         metadata:
           # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "70"
+          metricType: Utilization
   envConfig:
     ENV: "prod"
     WEBSITE_SITE_NAME: "pagopa-anonymizer" # required to show cloud role name in application insights
