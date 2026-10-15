@@ -158,18 +158,33 @@ It's recommended to use a virtual environment (`venv`) to manage Python versions
 
 ## Testing 🧪
 
-### Unit Testing (Conceptual)
+### Unit Testing
 
-While this template doesn't include specific unit tests, you would typically use a framework like `pytest` or Python's built-in `unittest` module.
+Install the project requirements and `pytest`, then run:
 
-**To run unit tests (example using pytest):**
-1.  Install pytest: `pip install pytest`
-2.  Create test files (e.g., `test_presidio_logic.py`, `test_app.py`) in a `tests/` directory.
-3.  Run tests:
-    ```bash
-    pytest
-    ```
-<!-- TODO: Add actual unit tests and update this section. -->
+```bash
+python -m pytest test/test_anonymizer_logic.py test/test_app.py test/test_logging_setup.py
+```
+
+The anonymizer tests cover existing masking behavior, vocabulary retention across
+distinct requests, concurrent calls, and cleanup after failures.
+
+### Production memory lifecycle
+
+The Italian spaCy model and Presidio engines are initialized once, not per request.
+Without a bounded lifecycle, spaCy's vocabulary and string/tokenizer caches retain
+new input across requests. Repeated identical load-test text hides this growth.
+
+Each anonymization now runs inside `Language.memory_zone()`, including Presidio
+analysis and anonymization. Only the resulting Python string leaves the zone;
+spaCy documents, tokens and spans must not escape it. A process-local lock prevents overlapping zones if the application is called from multiple threads. Keep the spaCy version pinned: older installations may not provide this API.
+
+Gunicorn uses `--preload` so the master loads the model before forking the four
+workers. On Linux, unchanged model pages can then be shared using copy-on-write.
+This does not eliminate per-worker or per-request allocations.
+
+See [performance tests](performance-test/README.md) for a distinct-input memory
+benchmark and a 500 requests/second HTTP soak test.
 
 ### Manual API Testing
 
