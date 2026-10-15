@@ -7,10 +7,18 @@ from src.utils import it_toponym, it_medical_info
 
 # Italian Address Recognizer
 # Matches common Italian street address formats.
+address_toponyms = "|".join(
+    re.escape(toponym) for toponym in sorted(it_toponym, key=len, reverse=True)
+)
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex="(" + "|".join(it_toponym) + ") +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*,?\s*\d*[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*?",
+        regex=(
+            r"(?i)(?:" + address_toponyms + r")\s+"
+            r"(?:[A-ZÀ-Üa-zà-ü]+(?:[’'.-][A-ZÀ-Üa-zà-ü]+)*\.?\s+){0,8}"
+            r"(?:n\.?\s*)?\d+(?:\s*(?:bis|ter|quater)|[A-Za-z])?\b"
+            r"(?:\s*,?\s*\d{5})?"
+        ),
         score=0.9
     ),
 ]

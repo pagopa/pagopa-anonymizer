@@ -263,6 +263,19 @@ class TestAnonymizerLogic(unittest.TestCase):
         self.assertEqual(anonymize_text,
                          "Multa per M**** R**** il giorno 12/07/2025 alle ore 11:00, codice fiscale GTRQWF12******** e carta identita n. AA*****AA, domiciliato in Piazza San Pietro n Roma (RM). Pagato attraverso iban IT47J******************0997 per autovettura targata XX0****. Contatti numero telefonico ******6333 ed email t**t@pagopa.it. Per assistenza andare sul sito web www.test.it")
 
+    def test_address_does_not_consume_following_pii(self):
+        anonymize_text = anonymize_text_with_presidio(
+            "Piazza San Pietro n. 35. Pagato attraverso iban IT47J0990650025128761820997 "
+            "per autovettura targata XX000XX. Contatti numero telefonico 3313516333 "
+            "ed email ginopaoli@pagopa.it."
+        )
+        self.assertEqual(
+            anonymize_text,
+            "Piazza San Pietro n. Pagato attraverso iban IT47J******************0997 "
+            "per autovettura targata XX0****. Contatti numero telefonico ******6333 "
+            "ed email g*******i@pagopa.it."
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
