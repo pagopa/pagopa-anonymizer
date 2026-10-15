@@ -2,11 +2,11 @@
   "scenarios": {
     "distinct_texts": {
       "executor": "constant-arrival-rate",
-      "rate": 25,
+      "rate": 100,
       "timeUnit": "1s",
       "duration": "30m",
-      "preAllocatedVUs": 25,
-      "maxVUs": 50
+      "preAllocatedVUs": 100,
+      "maxVUs": 200
     }
   },
   "thresholds": {
