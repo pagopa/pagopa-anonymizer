@@ -1,9 +1,47 @@
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
 
-from src.anonymizer_logic import anonymize_text_with_presidio
+from src.anonymizer_logic import NLP_ENGINE, anonymize_text_with_presidio
 
 
 class TestAnonymizerLogic(unittest.TestCase):
+    def test_concurrent_requests_do_not_overlap_memory_zones(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+        texts = [f"multa a Luca Rossi riferimento{index:012x}" for index in range(32)]
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            results = list(executor.map(anonymize_text_with_presidio, texts))
+
+        self.assertTrue(all("L*** R****" in result for result in results))
+        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+
+    def test_unique_requests_do_not_accumulate_nlp_vocabulary(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        anonymize_text_with_presidio("multa a Luca Rossi")
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+
+        for index in range(100):
+            anonymize_text_with_presidio(f"riferimentounico{index:012x}")
+
+        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+        self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
+                         "multa a L*** R****")
+
+    def test_nlp_memory_is_released_after_anonymization_error(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+
+        with patch("src.anonymizer_logic.ANONYMIZER.anonymize",
+                   side_effect=RuntimeError("Anonymization failed")):
+            with self.assertRaisesRegex(RuntimeError, "Anonymization failed"):
+                anonymize_text_with_presidio("riferimentoerroreabcdef123456")
+
+        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+        self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
+                         "multa a L*** R****")
+
     def test_anonymize_success_person(self):
         anonymize_text = anonymize_text_with_presidio('multa a Luca Rossi')
         self.assertEqual(anonymize_text, "multa a L*** R****")
