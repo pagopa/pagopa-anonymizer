@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anonymizer API",
-    "version": "1.0.1-2-PIDM-2512-optimize-ram-use"
+    "version": "1.0.1-3-PIDM-2512-optimize-ram-use"
   },
   "servers": [
     {
