@@ -15,7 +15,7 @@ class TestAnonymizerLogic(unittest.TestCase):
             results = list(executor.map(anonymize_text_with_presidio, texts))
 
         self.assertTrue(all("L*** R****" in result for result in results))
-        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+        self.assertEqual(before,(sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
 
     def test_unique_requests_do_not_accumulate_nlp_vocabulary(self):
         nlp = NLP_ENGINE.nlp["it"]
@@ -25,7 +25,7 @@ class TestAnonymizerLogic(unittest.TestCase):
         for index in range(100):
             anonymize_text_with_presidio(f"riferimentounico{index:012x}")
 
-        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+        self.assertEqual(before, (sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
         self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
                          "multa a L*** R****")
 
@@ -38,7 +38,7 @@ class TestAnonymizerLogic(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Anonymization failed"):
                 anonymize_text_with_presidio("riferimentoerroreabcdef123456")
 
-        self.assertEqual((sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)), before)
+        self.assertEqual(before, (sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
         self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
                          "multa a L*** R****")
 
