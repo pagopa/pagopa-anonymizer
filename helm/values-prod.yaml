@@ -71,11 +71,13 @@ microservice-chart:
           # Required
           value: "75"
           metricType: Utilization
+        metricType: Utilization
       - type: memory
         metadata:
           # Required
           value: "70"
           metricType: Utilization
+        metricType: Utilization
   envConfig:
     ENV: "prod"
     WEBSITE_SITE_NAME: "pagopa-anonymizer" # required to show cloud role name in application insights
