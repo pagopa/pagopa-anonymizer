@@ -22,7 +22,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 3
+    replicas: 1
   serviceMonitor:
     create: false
   ports:
@@ -49,15 +49,15 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "1.5Gi"
+      memory: "1Gi"
       cpu: "0.25"
     limits:
-      memory: "4Gi"
-      cpu: "0.75"
+      memory: "3Gi"
+      cpu: "0.50"
   autoscaling:
     enable: true
-    minReplica: 3
-    maxReplica: 10
+    minReplica: 1
+    maxReplica: 1
     pollingInterval: 10 # seconds
     cooldownPeriod: 120 # seconds
     triggers:
