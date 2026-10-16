@@ -62,14 +62,11 @@ microservice-chart:
     cooldownPeriod: 120 # seconds
     triggers:
       - type: cpu
+        metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          # Required
-          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
       - type: memory
         metadata:
-          # Required
-          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "70"
   envConfig:
     ENV: "prod"
