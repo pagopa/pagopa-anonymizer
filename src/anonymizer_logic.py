@@ -1,4 +1,5 @@
 import re
+from threading import Lock
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
@@ -6,10 +7,18 @@ from src.utils import it_toponym, it_medical_info
 
 # Italian Address Recognizer
 # Matches common Italian street address formats.
+address_toponyms = "|".join(
+    re.escape(toponym) for toponym in sorted(it_toponym, key=len, reverse=True)
+)
 italian_address_patterns = [
     Pattern(
         name="Address (Type + Name + Number)",
-        regex="(" + "|".join(it_toponym) + ") +[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*,?\s*\d*[A-ZÀ-Üa-zà-ü0-9'’\.\-\s]*?",
+        regex=(
+            r"(?i)(?:" + address_toponyms + r")\s+"
+            r"(?:[A-ZÀ-Üa-zà-ü]+(?:[’'.-][A-ZÀ-Üa-zà-ü]+)*\.?\s+){0,8}"
+            r"(?:n\.?\s*)?\d+(?:\s*(?:bis|ter|quater)|[A-Za-z])?\b"
+            r"(?:\s*,?\s*\d{5})?"
+        ),
         score=0.9
     ),
 ]
@@ -80,6 +89,7 @@ NLP_CONFIG = {
 }
 PROVIDER = NlpEngineProvider(nlp_configuration=NLP_CONFIG)
 NLP_ENGINE = PROVIDER.create_engine()
+NLP_LOCK = Lock()
 
 # 2. Analyzer Engine
 ANALYZER = AnalyzerEngine(
@@ -185,14 +195,16 @@ def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
     Anonymizes the input text using the configured Presidio Analyzer and Anonymizer.
     The current configuration is primarily for Italian text.
     """
-    analyzer_results = ANALYZER.analyze(
-        text=text_to_anonymize,
-        entities=ENTITIES_TO_ANONYMIZE,
-        language="it"  # Crucial to specify the language of the text
-    )
-    anonymized_result = ANONYMIZER.anonymize(
-        text=text_to_anonymize,
-        analyzer_results=analyzer_results,
-        operators=DEFAULT_OPERATORS
-    )
-    return anonymized_result.text
+    # Zones cannot overlap, and all spaCy-backed artifacts must stay inside them.
+    with NLP_LOCK, NLP_ENGINE.nlp["it"].memory_zone():
+        analyzer_results = ANALYZER.analyze(
+            text=text_to_anonymize,
+            entities=ENTITIES_TO_ANONYMIZE,
+            language="it"  # Crucial to specify the language of the text
+        )
+        anonymized_result = ANONYMIZER.anonymize(
+            text=text_to_anonymize,
+            analyzer_results=analyzer_results,
+            operators=DEFAULT_OPERATORS
+        )
+        return anonymized_result.text

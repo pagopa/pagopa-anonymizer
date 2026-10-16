@@ -1,9 +1,47 @@
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
 
-from src.anonymizer_logic import anonymize_text_with_presidio
+from src.anonymizer_logic import NLP_ENGINE, anonymize_text_with_presidio
 
 
 class TestAnonymizerLogic(unittest.TestCase):
+    def test_concurrent_requests_do_not_overlap_memory_zones(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+        texts = [f"multa a Luca Rossi riferimento{index:012x}" for index in range(32)]
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            results = list(executor.map(anonymize_text_with_presidio, texts))
+
+        self.assertTrue(all("L*** R****" in result for result in results))
+        self.assertEqual(before,(sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
+
+    def test_unique_requests_do_not_accumulate_nlp_vocabulary(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        anonymize_text_with_presidio("multa a Luca Rossi")
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+
+        for index in range(100):
+            anonymize_text_with_presidio(f"riferimentounico{index:012x}")
+
+        self.assertEqual(before, (sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
+        self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
+                         "multa a L*** R****")
+
+    def test_nlp_memory_is_released_after_anonymization_error(self):
+        nlp = NLP_ENGINE.nlp["it"]
+        before = sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)
+
+        with patch("src.anonymizer_logic.ANONYMIZER.anonymize",
+                   side_effect=RuntimeError("Anonymization failed")):
+            with self.assertRaisesRegex(RuntimeError, "Anonymization failed"):
+                anonymize_text_with_presidio("riferimentoerroreabcdef123456")
+
+        self.assertEqual(before, (sum(1 for _ in nlp.vocab), len(nlp.vocab.strings)))
+        self.assertEqual(anonymize_text_with_presidio("multa a Luca Rossi"),
+                         "multa a L*** R****")
+
     def test_anonymize_success_person(self):
         anonymize_text = anonymize_text_with_presidio('multa a Luca Rossi')
         self.assertEqual(anonymize_text, "multa a L*** R****")
@@ -224,6 +262,19 @@ class TestAnonymizerLogic(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(anonymize_text,
                          "Multa per M**** R**** il giorno 12/07/2025 alle ore 11:00, codice fiscale GTRQWF12******** e carta identita n. AA*****AA, domiciliato in Piazza San Pietro n Roma (RM). Pagato attraverso iban IT47J******************0997 per autovettura targata XX0****. Contatti numero telefonico ******6333 ed email t**t@pagopa.it. Per assistenza andare sul sito web www.test.it")
+
+    def test_address_does_not_consume_following_pii(self):
+        anonymize_text = anonymize_text_with_presidio(
+            "Piazza San Pietro n. 35. Pagato attraverso iban IT47J0990650025128761820997 "
+            "per autovettura targata XX000XX. Contatti numero telefonico 3313516333 "
+            "ed email ginopaoli@pagopa.it."
+        )
+        self.assertEqual(
+            anonymize_text,
+            "Piazza San Pietro n. Pagato attraverso iban IT47J******************0997 "
+            "per autovettura targata XX0****. Contatti numero telefonico ******6333 "
+            "ed email g*******i@pagopa.it."
+        )
 
 
 if __name__ == '__main__':

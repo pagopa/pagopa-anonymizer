@@ -17,12 +17,14 @@ parameters:
       - "load"
       - "spike"
       - "stress"
+      - "soak"
     default: "constant"
   - name: "SCRIPT"
     displayName: "Script name"
     type: string
     values:
       - anonymizer
+      - memory_soak
   - name: "DB_NAME"
     displayName: "DB name"
     type: string

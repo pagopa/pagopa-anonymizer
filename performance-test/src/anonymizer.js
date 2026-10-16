@@ -16,8 +16,8 @@ export function setup() {
   // 2. setup code
 }
 
-const MIXED_PII_TEXT = "Multa per Mario Rossi il giorno 12/07/2025 alle ore 11:00, codice fiscale GTRQWF12L23B157A e carta identita n. AA00000AA, domiciliato in Piazza San Pietro n. 35. Pagato attraverso iban IT47J0990650025128761820997 per autovettura targata XX000XX. Contatti numero telefonico 3313516333 ed email test@pagopa.it. Per assistenza andare sul sito web www.test.it";
-const MIXED_ANONYMIZED_TEXT = "Multa per <PERSON> il giorno <ANONYMIZED> alle ore 11:00, codice fiscale <FISCAL_CODE> e carta identita n. <ANONYMIZED>, domiciliato in <ADDRESS>. Pagato attraverso iban <ANONYMIZED> per autovettura targata <PLATE_NUMBER>. Contatti numero telefonico <PHONE> ed email <EMAIL>. Per assistenza andare sul sito web <ANONYMIZED>";
+const MIXED_PII_TEXT = "Multa per Mario Rossi il giorno 12/07/2025 alle ore 11:00, codice fiscale GTRQWF12L23B157A e carta identita n. AA00000AA, domiciliato in Piazza San Pietro n. 35. Pagato attraverso iban IT47J0990650025128761820997 per autovettura targata MR927LS. Contatti numero telefonico 3313516333 ed email test@pagopa.it. Per assistenza andare sul sito web www.test.it";
+const MIXED_ANONYMIZED_TEXT = "Multa per M**** R**** il giorno 12/07/2025 alle ore 11:00, codice fiscale GTRQWF12******** e carta identita n. AA*****AA, domiciliato in Piazza San Pietro n. Pagato attraverso iban IT47J******************0997 per autovettura targata MR9****. Contatti numero telefonico ******6333 ed email t**t@pagopa.it. Per assistenza andare sul sito web www.test.it";
 export default function (data) {
   // 3. VU code
   let response = anonymizePII(anonymizeUri, subKey, MIXED_PII_TEXT);

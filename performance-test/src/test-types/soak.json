@@ -1,0 +1,18 @@
+{
+  "scenarios": {
+    "distinct_texts": {
+      "executor": "constant-arrival-rate",
+      "rate": 40,
+      "timeUnit": "1s",
+      "duration": "30m",
+      "preAllocatedVUs": 40,
+      "maxVUs": 100
+    }
+  },
+  "thresholds": {
+    "checks": ["rate>0.999"],
+    "dropped_iterations": ["count==0"],
+    "http_req_failed": ["rate<0.001"],
+    "http_req_duration": ["p(99)<3000"]
+  }
+}
