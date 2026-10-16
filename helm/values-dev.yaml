@@ -64,7 +64,7 @@ microservice-chart:
       - type: cpu
         metadata:
           # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
     ENV: "dev"
