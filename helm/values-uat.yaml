@@ -42,6 +42,13 @@ microservice-chart:
     host: "weuuat.shared.internal.uat.platform.pagopa.it"
     path: /pagopa-anonymizer/(.*)
     servicePort: 3000
+    haproxy:
+      create: true
+      host: "weuuat.shared.internal.uat.platform.pagopa.it"
+      path: "/pagopa-anonymizer/"
+      rewriteTarget: "/"
+      annotations:
+        haproxy.org/check: "true"
   serviceAccount:
     name: "shared-workload-identity"
   azure:
