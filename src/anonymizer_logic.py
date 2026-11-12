@@ -1,6 +1,7 @@
 import re
 from threading import Lock
 from presidio_analyzer import Pattern, PatternRecognizer, AnalyzerEngine
+from presidio_anonymizer.entities import ConflictResolutionStrategy
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
 from src.utils import it_toponym, it_medical_info
@@ -66,7 +67,11 @@ plate_recognizer = PatternRecognizer(patterns=[plate_pattern],
 medical_patterns = [
     Pattern(
         name="MEDICAL_INFO_PATTERN",
-        regex=r"\W(" + "|".join(it_medical_info) + ")",
+        regex=(
+                r"(?:\s+|(?<!\w))(?:"
+                + "|".join(re.escape(term) for term in sorted(it_medical_info, key=len, reverse=True))
+                + r")(?!\w)"
+        ),
         score=0.7
     ),
 ]
@@ -205,6 +210,7 @@ def anonymize_text_with_presidio(text_to_anonymize: str) -> str:
         anonymized_result = ANONYMIZER.anonymize(
             text=text_to_anonymize,
             analyzer_results=analyzer_results,
-            operators=DEFAULT_OPERATORS
+            operators=DEFAULT_OPERATORS,
+            conflict_resolution=ConflictResolutionStrategy.REMOVE_INTERSECTIONS
         )
         return anonymized_result.text
