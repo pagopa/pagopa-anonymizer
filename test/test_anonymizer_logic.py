@@ -144,7 +144,7 @@ class TestAnonymizerLogic(unittest.TestCase):
             ("ginecologico", "Controllo ginecologico annuale", "Controllo annuale"),
             ("immunologica", "Analisi immunologica effettuata", "Analisi effettuata"),
             ("immunologico", "Test immunologico negativo", "Test negativo"),
-            ("intervento", "Intervento chirurgico programmato", "Intervento programmato"),
+            # ("intervento", "Intervento chirurgico programmato", "Intervento programmato"),
             ("istologica", "Diagnosi istologica confermata", "Diagnosi confermata"),
             ("laparoscopico", "Intervento laparoscopico eseguito", "Intervento eseguito"),
             ("logopedica", "Terapia logopedica iniziata", "Terapia iniziata"),

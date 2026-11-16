@@ -65,7 +65,7 @@ it_medical_info = [
     "ginecologico",
     "immunologica",
     "immunologico",
-    "intervento",
+    # "intervento",
     "istologica",
     "laparoscopico",
     "logopedica",
